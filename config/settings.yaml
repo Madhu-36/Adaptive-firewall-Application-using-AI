@@ -1,0 +1,55 @@
+# =============================================================================
+# Adaptive Firewall AI — Global Configuration
+# =============================================================================
+
+firewall:
+  interface: "eth0"               # Network interface to sniff on
+  promiscuous_mode: true
+  simulation_mode: true          # Set true on Windows/macOS for testing
+
+flow:
+  idle_timeout_sec: 60            # Seconds before an idle flow is finalized
+  max_concurrent_flows: 50000     # Maximum tracked flows in FlowTable
+  feature_queue_maxsize: 10000    # asyncio.Queue max depth
+
+ml:
+  model_path: "models/behavior_classifier.pt"
+  scaler_path: "models/scaler.pkl"
+  baseline_path: "models/baseline_profiles.pkl"
+  anomaly_threshold: 0.65         # Score > this = anomaly
+  batch_size: 32
+  inference_device: "cpu"         # "cuda" if GPU available
+
+rl:
+  model_path: "models/ppo_firewall.zip"
+  train_on_startup: false
+  total_timesteps: 500000
+  save_every_n_steps: 10000
+
+nftables:
+  enabled: false
+  table_name: "inet filter"
+  chain_name: "input"
+  rule_ttl_sec: 300               # Block rules expire after 5 minutes
+  cleanup_interval_sec: 30        # Background cleanup scan interval
+  max_rules: 1000
+  rate_limit_pps: 100             # Packets/sec for RATE_LIMIT action
+
+ebpf:
+  enabled: false                  # Enable only on high-load (>10Gbps) scenarios
+  xdp_program: "kernel/ebpf/xdp_drop.c"
+  interface: "eth0"
+
+api:
+  host: "0.0.0.0"
+  port: 8000
+  cors_origins:
+    - "http://localhost:3000"
+    - "http://localhost:8000"
+  ws_broadcast_interval_ms: 500   # WebSocket push rate
+
+logging:
+  level: "INFO"
+  log_file: "logs/firewall.log"
+  max_bytes: 10485760             # 10 MB
+  backup_count: 5
