@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Firewall Dashboard</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Neon/Cyberpunk Palette */
+            --bg-base: #050511;
+            --bg-glass: rgba(13, 17, 33, 0.65);
+            --bg-glass-hover: rgba(18, 25, 48, 0.85);
+            --border-glow: rgba(0, 240, 255, 0.15);
+            --border-solid: rgba(0, 240, 255, 0.3);
+            
+            --text-main: #f0f4f8;
+            --text-muted: #8b9bb4;
+            
+            --accent-cyan: #00f0ff;
+            --accent-blue: #0044ff;
+            --danger: #ff0055;
+            --danger-glow: rgba(255, 0, 85, 0.2);
+            --success: #00ff88;
+            --success-glow: rgba(0, 255, 136, 0.2);
+            --warning: #ffaa00;
+            --warning-glow: rgba(255, 170, 0, 0.2);
+            
+            --font-sans: 'Inter', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-base);
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(0, 68, 255, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 85% 30%, rgba(0, 240, 255, 0.1) 0%, transparent 50%);
+            background-attachment: fixed;
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 30px;
+            overflow-x: hidden;
+        }
+
+        /* Glassmorphism Container Base */
+        .glass-panel {
+            background: var(--bg-glass);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border-glow);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px 30px;
+            border-bottom: 1px solid var(--border-solid);
+            box-shadow: 0 4px 30px rgba(0, 240, 255, 0.05);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--text-main) 0%, var(--accent-cyan) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        /* Status Badge */
+        .status-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: var(--success);
+            box-shadow: 0 0 10px var(--success), 0 0 20px var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.disconnected {
+            background-color: var(--danger);
+            box-shadow: 0 0 10px var(--danger), 0 0 20px var(--danger);
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            50% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(0.95); opacity: 0.8; }
+        }
+
+        .status-text {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--success);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .status-text.disconnected { color: var(--danger); }
+
+        /* Grid Layouts */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 30px;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Metric Cards */
+        .metric-card {
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-cyan), transparent);
+            opacity: 0.5;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent-cyan);
+            box-shadow: 0 10px 40px rgba(0, 240, 255, 0.1);
+        }
+
+        .metric-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .metric-value {
+            font-size: 42px;
+            font-weight: 700;
+            line-height: 1.1;
+            font-family: var(--font-mono);
+        }
+
+        .metric-sub {
+            margin-top: 8px;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .value-danger { color: var(--danger); text-shadow: 0 0 15px var(--danger-glow); }
+        .value-warning { color: var(--warning); text-shadow: 0 0 15px var(--warning-glow); }
+        .value-success { color: var(--success); text-shadow: 0 0 15px var(--success-glow); }
+        .value-cyan { color: var(--accent-cyan); text-shadow: 0 0 15px rgba(0,240,255,0.2); }
+
+        /* Tables */
+        .table-section {
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .section-header {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-header::before {
+            content: '';
+            display: inline-block;
+            width: 4px;
+            height: 18px;
+            background: var(--accent-cyan);
+            border-radius: 4px;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 8px;
+            border: 1px solid var(--border-glow);
+            flex-grow: 1;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th {
+            background: rgba(0, 0, 0, 0.3);
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 16px;
+            border-bottom: 1px solid var(--border-glow);
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+        
+        .ip-cell {
+            font-family: var(--font-mono);
+            color: var(--accent-cyan);
+        }
+
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        tr:last-child td { border-bottom: none; }
+
+        /* Badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-drop { background: var(--danger-glow); color: var(--danger); border: 1px solid rgba(255,0,85,0.3); }
+        .badge-rate { background: var(--warning-glow); color: var(--warning); border: 1px solid rgba(255,170,0,0.3); }
+
+        /* Logs */
+        .log-section {
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            height: 500px;
+        }
+
+        .log-container {
+            flex-grow: 1;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-glow);
+            border-radius: 8px;
+            padding: 16px;
+            overflow-y: auto;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent-cyan); }
+
+        .log-entry {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 8px;
+            border-radius: 4px;
+            animation: slideIn 0.3s ease-out forwards;
+            background: rgba(255, 255, 255, 0.02);
+            border-left: 2px solid transparent;
+        }
+        
+        .log-entry.log-drop { border-left-color: var(--danger); background: linear-gradient(90deg, rgba(255,0,85,0.05), transparent); }
+        .log-entry.log-rate { border-left-color: var(--warning); background: linear-gradient(90deg, rgba(255,170,0,0.05), transparent); }
+        .log-entry.log-allow { border-left-color: var(--success); }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .log-time { color: #5a6b8c; min-width: 85px; }
+        .log-action { font-weight: 700; min-width: 90px; }
+        .log-action.DROP { color: var(--danger); }
+        .log-action.RATE_LIMIT { color: var(--warning); }
+        .log-action.ALLOW { color: var(--success); }
+        
+        .log-details { color: var(--text-main); flex-grow: 1; }
+        .log-meta { color: var(--text-muted); font-size: 12px; margin-top: 4px; display: flex; gap: 12px;}
+        .log-meta span { display: inline-flex; align-items: center; gap: 4px; }
+
+        .empty-state {
+            padding: 40px;
+            text-align: center;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+        
+        .score-bar-bg {
+            width: 100px;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            overflow: hidden;
+            display: inline-block;
+            vertical-align: middle;
+            margin-left: 8px;
+        }
+        
+        .score-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.3s;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="glass-panel header">
+        <h1>Adaptive AI Firewall</h1>
+        <div class="status-container">
+            <div id="ws-dot" class="status-dot disconnected"></div>
+            <div id="ws-status" class="status-text disconnected">System Offline</div>
+        </div>
+    </div>
+
+    <div class="metrics-grid">
+        <div class="glass-panel metric-card">
+            <div class="metric-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                Threats Blocked
+            </div>
+            <div id="stat-blocked" class="metric-value value-danger">0</div>
+            <div class="metric-sub">Total active drops</div>
+        </div>
+        
+        <div class="glass-panel metric-card">
+            <div class="metric-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                Rate Limits
+            </div>
+            <div id="stat-rate" class="metric-value value-warning">0</div>
+            <div class="metric-sub">Throttled connections</div>
+        </div>
+        
+        <div class="glass-panel metric-card">
+            <div class="metric-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                Avg Latency
+            </div>
+            <div class="metric-value value-cyan"><span id="stat-latency">0.0</span><span style="font-size: 20px; color: var(--text-muted); margin-left: 4px;">ms</span></div>
+            <div class="metric-sub">Kernel processing time</div>
+        </div>
+        
+        <div class="glass-panel metric-card">
+            <div class="metric-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                Flows Processed
+            </div>
+            <div id="stat-flows" class="metric-value value-success">0</div>
+            <div class="metric-sub">Total packets analyzed</div>
+        </div>
+    </div>
+
+    <div class="main-grid">
+        <div class="glass-panel table-section">
+            <div class="section-header">Active Mitigation Rules</div>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Source IP</th>
+                            <th>Action</th>
+                            <th>AI Threat Score</th>
+                            <th>Age</th>
+                            <th>TTL</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rules-table-body">
+                        <tr><td colspan="5" class="empty-state">No active mitigation rules. System is healthy.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="glass-panel log-section">
+            <div class="section-header">Live Event Stream</div>
+            <div id="action-log" class="log-container">
+                <!-- Logs populated dynamically -->
+                <div style="text-align:center; color: var(--text-muted); margin-top: 20px;">Waiting for events...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const wsStatus = document.getElementById('ws-status');
+        const wsDot = document.getElementById('ws-dot');
+        const statBlocked = document.getElementById('stat-blocked');
+        const statRate = document.getElementById('stat-rate');
+        const statLatency = document.getElementById('stat-latency');
+        const statFlows = document.getElementById('stat-flows');
+        const rulesTable = document.getElementById('rules-table-body');
+        const actionLog = document.getElementById('action-log');
+
+        let ws;
+        let isFirstLog = true;
+
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/ws/events`;
+            
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                wsStatus.textContent = 'System Online';
+                wsStatus.className = 'status-text';
+                wsDot.className = 'status-dot';
+            };
+
+            ws.onclose = () => {
+                wsStatus.textContent = 'Connection Lost';
+                wsStatus.className = 'status-text disconnected';
+                wsDot.className = 'status-dot disconnected';
+                setTimeout(connectWebSocket, 3000);
+            };
+
+            ws.onerror = (err) => {
+                console.error("WebSocket Error:", err);
+            };
+
+            ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    
+                    if (data.type === 'stats_update') {
+                        updateStats(data);
+                    } else if (data.type === 'block_event' || data.type === 'allow_event') {
+                        appendLog(data);
+                    }
+                } catch (e) {
+                    console.error("Error parsing message", e);
+                }
+            };
+        }
+
+        function animateValue(element, start, end, duration) {
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                const current = Math.floor(progress * (end - start) + start);
+                element.textContent = current.toLocaleString();
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                } else {
+                    element.textContent = end.toLocaleString();
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+        
+        function updateValueWithAnimation(element, newValue) {
+            const currentValue = parseInt(element.textContent.replace(/,/g, '')) || 0;
+            if (currentValue !== newValue) {
+                animateValue(element, currentValue, newValue, 500);
+            }
+        }
+
+        function updateStats(data) {
+            updateValueWithAnimation(statBlocked, data.total_blocks);
+            updateValueWithAnimation(statRate, data.total_rate_limits);
+            updateValueWithAnimation(statFlows, data.total_flows);
+            
+            if (data.avg_latency_ms !== undefined) {
+                statLatency.textContent = data.avg_latency_ms.toFixed(2);
+            }
+
+            // Optional: If the backend sends active rules in the stats update, we update the table here.
+            // Since the original script expected state.active_rules, let's keep the logic.
+            // In the provided Python backend, active_rules was just an integer in stats.
+            // But if it ever sends rule lists, this will handle it.
+            if (data.active_rules_list) {
+                updateRulesTable(data.active_rules_list);
+            }
+        }
+
+        function updateRulesTable(rules) {
+            if (!rules || rules.length === 0) {
+                rulesTable.innerHTML = '<tr><td colspan="5" class="empty-state">No active mitigation rules. System is healthy.</td></tr>';
+                return;
+            }
+
+            rulesTable.innerHTML = '';
+            
+            const sortedRules = [...rules].sort((a, b) => b.threat_score - a.threat_score);
+            
+            sortedRules.forEach(rule => {
+                const tr = document.createElement('tr');
+                
+                let actionBadge = rule.action === 'DROP' ? 'badge-drop' : 'badge-rate';
+                
+                // Threat score visual bar
+                let scoreColor = rule.threat_score > 0.8 ? 'var(--danger)' : (rule.threat_score > 0.5 ? 'var(--warning)' : 'var(--success)');
+                let scorePct = Math.min(Math.max(rule.threat_score * 100, 5), 100);
+                
+                tr.innerHTML = `
+                    <td class="ip-cell">${rule.src_ip}</td>
+                    <td><span class="badge ${actionBadge}">${rule.action}</span></td>
+                    <td>
+                        ${rule.threat_score.toFixed(2)}
+                        <div class="score-bar-bg"><div class="score-bar-fill" style="width: ${scorePct}%; background-color: ${scoreColor}"></div></div>
+                    </td>
+                    <td>${rule.age_seconds.toFixed(0)}s</td>
+                    <td>${rule.ttl_sec.toFixed(0)}s</td>
+                `;
+                rulesTable.appendChild(tr);
+            });
+        }
+
+        function appendLog(event) {
+            if (isFirstLog) {
+                actionLog.innerHTML = '';
+                isFirstLog = false;
+            }
+            
+            const entry = document.createElement('div');
+            let logClass = 'log-allow';
+            if (event.action === 'DROP') logClass = 'log-drop';
+            if (event.action === 'RATE_LIMIT') logClass = 'log-rate';
+            
+            entry.className = \`log-entry \${logClass}\`;
+            
+            const time = new Date(event.timestamp * 1000).toLocaleTimeString([], { hour12: false });
+            
+            entry.innerHTML = \`
+                <div class="log-time">\${time}</div>
+                <div class="log-action \${event.action}">\${event.action}</div>
+                <div style="flex-grow: 1;">
+                    <div class="log-details"><span class="ip-cell">\${event.src_ip}</span> &rarr; \${event.dst_ip}</div>
+                    <div class="log-meta">
+                        <span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg> Score: \${(event.anomaly_score * 100).toFixed(1)}%</span>
+                        <span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg> \${event.total_latency_ms.toFixed(2)}ms</span>
+                    </div>
+                </div>
+            \`;
+            
+            actionLog.prepend(entry);
+            
+            // Keep only last 100 logs to prevent DOM bloat
+            if (actionLog.children.length > 100) {
+                actionLog.removeChild(actionLog.lastChild);
+            }
+        }
+
+        // Initialize WebSocket connection
+        connectWebSocket();
+        
+        // Setup simple polling for active rules since the stats update doesn't include the full list
+        setInterval(async () => {
+            try {
+                const res = await fetch('/api/rules');
+                const data = await res.json();
+                updateRulesTable(data.rules || []);
+            } catch (e) {
+                // Silently ignore fetch errors in the UI
+            }
+        }, 2000);
+
+    </script>
+</body>
+</html>
