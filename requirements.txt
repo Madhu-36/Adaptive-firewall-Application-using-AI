@@ -1,0 +1,55 @@
+# =============================================================================
+# requirements.txt — Adaptive Firewall AI
+# Python 3.10+ required | Target OS: Ubuntu 22.04 LTS
+# =============================================================================
+
+# ── Web Framework & API ────────────────────────────────────────────────────────
+fastapi==0.115.6
+uvicorn[standard]==0.32.1
+websockets==14.1
+pydantic==2.10.4
+python-multipart==0.0.20
+httpx==0.28.1
+
+# ── Networking & Packet Capture ────────────────────────────────────────────────
+scapy==2.6.1
+
+# ── Machine Learning & Data Science ───────────────────────────────────────────
+# torch==2.13.0
+# torchvision==0.28.0
+# scikit-learn==1.5.0
+# numpy==2.1.3
+# pandas==2.2.3
+# scipy==1.14.1
+# joblib==1.4.2
+
+# ── Reinforcement Learning ────────────────────────────────────────────────────────
+# stable-baselines3==2.4.0
+# gymnasium==1.0.0
+# rich==13.9.4           # Progress bars for training
+
+# ── Configuration ───────────────────────────────────────────────────────────────
+# yaml==0.2.5
+pyyaml==6.0.2
+python-dotenv==1.0.1
+
+# ── Testing ───────────────────────────────────────────────────────────────────
+pytest==8.3.4
+pytest-asyncio==0.25.2
+pytest-cov==6.0.0
+pytest-mock==3.14.0
+coverage==7.6.10
+
+# ── Monitoring & Logging ───────────────────────────────────────────────────────
+prometheus-client==0.21.1
+psutil==6.1.1
+
+# ── Utilities ───────────────────────────────────────────────────────────────────
+click==8.1.8
+tqdm==4.67.1
+aiofiles==24.1.0
+
+# ── Optional: eBPF bindings (Linux only) ──────────────────────────────────────
+# Install separately on Ubuntu: sudo apt install python3-bpfcc
+# bcc==0.31.0          # Uncomment to install via pip (may fail — use apt)
+# pyroute2==0.7.12     # Alternative netlink/XDP loader
