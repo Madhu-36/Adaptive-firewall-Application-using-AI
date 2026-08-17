@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+
+# Virtual environments
+venv/
+.env
+
+# IDE
+.vscode/
+.idea/
+
+# ML model artifacts (generated at runtime)
+models/*.pt
+models/*.pkl
+models/*.zip
+
+# Database & Logs (generated at runtime)
+data/*.db
+logs/*.log
+
+# OS
+.DS_Store
+Thumbs.db
