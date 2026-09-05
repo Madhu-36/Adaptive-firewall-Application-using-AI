@@ -119,3 +119,6 @@ python drl_agent.py
 - Rule injection target: < 50ms
 - Automatic TTL-based cleanup every 30 seconds
 - Emergency cleanup when rule capacity (10,000) is reached
+
+## Dashboard 2.0
+The firewall now includes a real-time glassmorphism dashboard powered by Chart.js.
