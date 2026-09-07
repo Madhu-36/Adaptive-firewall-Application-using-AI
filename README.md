@@ -122,3 +122,6 @@ python drl_agent.py
 
 ## Dashboard 2.0
 The firewall now includes a real-time glassmorphism dashboard powered by Chart.js.
+
+## Testing
+Run pytest to execute the test suite.
