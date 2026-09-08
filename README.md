@@ -125,3 +125,6 @@ The firewall now includes a real-time glassmorphism dashboard powered by Chart.j
 
 ## Testing
 Run pytest to execute the test suite.
+
+## Contributing
+Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute.
