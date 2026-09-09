@@ -11,3 +11,7 @@
 ## [2.2.0] - Today
 - Added initial testing placeholders for ML models
 - Added contributing and security docs
+
+## [2.3.0] - Today
+- Added Code of Conduct and License
+- Added Dependabot config
