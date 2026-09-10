@@ -131,3 +131,6 @@ Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute.
 
 ## Code of Conduct
 Please see [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for our community guidelines.
+
+## Troubleshooting
+If you encounter any issues, please open a GitHub issue with the exact error log.
