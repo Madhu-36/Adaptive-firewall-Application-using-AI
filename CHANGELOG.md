@@ -15,3 +15,7 @@
 ## [2.3.0] - Today
 - Added Code of Conduct and License
 - Added Dependabot config
+
+## [2.4.0] - Today
+- Added linting configs (flake8, bandit, black)
+- Added more test placeholders
