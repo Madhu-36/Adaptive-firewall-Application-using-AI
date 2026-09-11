@@ -19,3 +19,7 @@
 ## [2.4.0] - Today
 - Added linting configs (flake8, bandit, black)
 - Added more test placeholders
+
+## [2.5.0] - Today
+- Added isort, mypy, and pre-commit configurations
+- Added testing helpers
