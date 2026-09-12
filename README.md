@@ -134,3 +134,6 @@ Please see [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for our community guidelines
 
 ## Troubleshooting
 If you encounter any issues, please open a GitHub issue with the exact error log.
+
+## FAQ
+Check this section for frequently asked questions.
