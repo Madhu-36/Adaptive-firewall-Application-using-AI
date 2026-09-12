@@ -23,3 +23,8 @@
 ## [2.5.0] - Today
 - Added isort, mypy, and pre-commit configurations
 - Added testing helpers
+
+## [2.6.0] - Today
+- Added Docker support placeholders
+- Added edge case tests
+- Added advanced docs
