@@ -328,7 +328,7 @@ class FirewallPPOAgent:
         self.model.learn(
             total_timesteps=total_timesteps,
             callback=callback,
-            progress_bar=True,
+            progress_bar=False,
         )
         logger.info("PPO training complete")
 
