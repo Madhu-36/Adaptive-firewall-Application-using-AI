@@ -329,6 +329,56 @@ def create_dashboard_app(
     .pill-purple { background: rgba(139, 92, 246, 0.2); color: #a78bfa; border: 1px solid rgba(139, 92, 246, 0.4); }
     .pill-amber  { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); }
 
+    /* Expected Outcomes & Target Environments */
+    .outcomes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    .outcome-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-md);
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      position: relative;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .outcome-card:hover {
+      border-color: var(--accent-cyan);
+      transform: translateY(-2px);
+    }
+    .outcome-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .outcome-title {
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-main);
+    }
+    .outcome-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+    .outcome-metric {
+      margin-top: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      font-family: var(--font-mono);
+      font-size: 11px;
+    }
+
     /* Active Rules & Feed Row */
     .bottom-grid {
       display: grid;
@@ -679,6 +729,92 @@ def create_dashboard_app(
         </div>
         <div class="terminal-feed" id="terminal-stream">
           <!-- Live events populate here -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Expected Outcomes & Target Deployment Environments (Slide 14 Alignment) -->
+    <section class="panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <i>🌐</i> Expected Outcomes &amp; Target Deployment Environments
+        </div>
+        <span class="badge badge-allow">SLIDE 14 SPECIFICATION</span>
+      </div>
+      <div class="outcomes-grid">
+        <!-- 1. Enterprise Networks -->
+        <div class="outcome-card">
+          <div class="outcome-header">
+            <div class="outcome-title"><span>🏢</span> Enterprise Networks</div>
+            <span class="badge badge-drop" style="font-size:10px;">DDoS / ZERO-DAY</span>
+          </div>
+          <div class="outcome-desc">
+            Real-time DDoS/zero-day protection for corporate servers; auto-scales dynamically during attack surges.
+          </div>
+          <div class="outcome-metric">
+            <span style="color: var(--accent-cyan);">Adaptive Surge Scaling</span>
+            <span style="color: var(--accent-emerald);">● ACTIVE PROTECTION</span>
+          </div>
+        </div>
+
+        <!-- 2. Cloud/VPN Environments -->
+        <div class="outcome-card">
+          <div class="outcome-header">
+            <div class="outcome-title"><span>☁️</span> Cloud/VPN Environments</div>
+            <span class="badge badge-rate" style="font-size:10px;">MULTI-TENANT</span>
+          </div>
+          <div class="outcome-desc">
+            Dynamic rule adaptation for multi-tenant traffic; autonomously secures hybrid workloads.
+          </div>
+          <div class="outcome-metric">
+            <span style="color: var(--accent-amber);">Dynamic Rule Adaptation</span>
+            <span style="color: var(--accent-emerald);">● HYBRID SECURED</span>
+          </div>
+        </div>
+
+        <!-- 3. IoT/5G Networks -->
+        <div class="outcome-card">
+          <div class="outcome-header">
+            <div class="outcome-title"><span>📡</span> IoT/5G Networks</div>
+            <span class="badge badge-zero" style="font-size:10px;">HIGH-SPEED</span>
+          </div>
+          <div class="outcome-desc">
+            High-speed anomaly detection for millions of devices; kernel-level filtering prevents botnets.
+          </div>
+          <div class="outcome-metric">
+            <span style="color: var(--accent-purple);">Kernel-Level Wire Drop</span>
+            <span style="color: var(--accent-emerald);">● BOTNET IMMUNE</span>
+          </div>
+        </div>
+
+        <!-- 4. Critical Infrastructure -->
+        <div class="outcome-card">
+          <div class="outcome-header">
+            <div class="outcome-title"><span>⚡</span> Critical Infrastructure</div>
+            <span class="badge badge-allow" style="font-size:10px;">99.9% UPTIME</span>
+          </div>
+          <div class="outcome-desc">
+            Power grids, hospitals &mdash; self-healing defense ensures 99.9% uptime vs. targeted attacks.
+          </div>
+          <div class="outcome-metric">
+            <span style="color: var(--accent-emerald);">Self-Healing Defense</span>
+            <span style="color: var(--accent-emerald);">● 99.9% SLA</span>
+          </div>
+        </div>
+
+        <!-- 5. Data Centers -->
+        <div class="outcome-card">
+          <div class="outcome-header">
+            <div class="outcome-title"><span>🗄️</span> Data Centers</div>
+            <span class="badge badge-drop" style="font-size:10px;">50k+ CAPACITY</span>
+          </div>
+          <div class="outcome-desc">
+            50k+ connection capacity; reduces admin overhead by 90% through autonomous operation.
+          </div>
+          <div class="outcome-metric">
+            <span style="color: var(--accent-cyan);">-90% Admin Overhead</span>
+            <span style="color: var(--accent-emerald);">● AUTONOMOUS</span>
+          </div>
         </div>
       </div>
     </section>
