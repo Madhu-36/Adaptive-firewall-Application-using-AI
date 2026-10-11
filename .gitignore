@@ -22,7 +22,10 @@ models/*.zip
 
 # Database & Logs (generated at runtime)
 data/*.db
-logs/*.log
+data/*.db-*
+logs/
+*.log
+debug.log
 
 # OS
 .DS_Store

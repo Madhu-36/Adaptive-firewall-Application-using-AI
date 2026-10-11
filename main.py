@@ -37,6 +37,8 @@ from drl_agent import FirewallPPOAgent
 from kernel_enforcer import KernelEnforcer
 from logger_db import DatabaseManager, setup_logging
 from sniffer import PacketSniffer
+from threat_intel import ThreatIntelligenceFeed
+from xai_explainer import AnomalyExplainer
 
 
 logger = logging.getLogger("firewall.main")
@@ -70,6 +72,8 @@ class FirewallOrchestrator:
         self.classifier = AnomalyClassifier()
         self.rl_agent = FirewallPPOAgent()
         self.enforcer = KernelEnforcer()
+        self.threat_intel = ThreatIntelligenceFeed()
+        self.explainer = AnomalyExplainer()
 
         # Running state
         self._running = False
@@ -80,7 +84,7 @@ class FirewallOrchestrator:
     # ------------------------------------------------------------------
 
     def _initialize_models(self) -> None:
-        """Load or train ML and RL models."""
+        """Load or train ML and RL models, and calibrate XAI baseline."""
         logger.info("Initializing ML models...")
 
         # Try loading saved models
@@ -93,13 +97,18 @@ class FirewallOrchestrator:
             ])
             self.classifier.fine_tune_classifier(X_all, y_all, epochs=20)
             self.classifier.save()
+        else:
+            X_normal, _, _, _ = self.classifier.generate_mock_data(n_normal=200, n_attack=0)
+
+        # Calibrate Explainable AI baseline
+        self.explainer.fit_baseline(X_normal, lambda x: self.classifier.predict_batch(x)[0])
 
         if not self.rl_agent.load():
             logger.info("Training RL agent from scratch...")
             self.rl_agent.train(total_timesteps=50_000)  # Quick train for startup
             self.rl_agent.save()
 
-        logger.info("All models initialized.")
+        logger.info("All models initialized and baseline calibrated.")
 
     def _initialize_kernel(self) -> None:
         """Setup nftables tables and chains."""
@@ -113,7 +122,8 @@ class FirewallOrchestrator:
     async def _classifier_loop(self) -> None:
         """
         Stage 2: Pull feature vectors from the sniffer queue,
-        run ML inference, and feed decisions to the RL agent.
+        run ML inference with threat intel scoring, generate XAI explanation,
+        and feed decisions to the RL agent.
         """
         logger.info("Classifier loop started")
         while self._running:
@@ -125,8 +135,25 @@ class FirewallOrchestrator:
                 features = flow_info["features"]
                 src_ip = flow_info["src_ip"]
 
+                # Global Threat Intelligence Feed check (OSINT)
+                threat_mult = self.threat_intel.check_ip(src_ip)
+
                 # ML inference
                 anomaly_score, threat_label, latent_vec = self.classifier.predict(features)
+
+                # Apply OSINT threat multiplier if IP is globally flagged
+                if threat_mult > 1.0:
+                    anomaly_score = min(1.0, anomaly_score * threat_mult)
+                    if threat_label == "NORMAL":
+                        threat_label = "OSINT_FLAGGED_IP"
+
+                # Explainable AI (XAI) feature attribution
+                if anomaly_score > config.RATE_LIMIT_THRESHOLD or threat_mult > 1.0:
+                    explanation = self.explainer.explain_anomaly(features.reshape(1, -1))
+                    if threat_mult > 1.0:
+                        explanation += f" | OSINT feed match ({threat_mult}x multiplier)"
+                else:
+                    explanation = "[XAI]: Normal baseline traffic profile verified"
 
                 # RL decision
                 action, action_name = self.rl_agent.decide(
@@ -145,6 +172,7 @@ class FirewallOrchestrator:
                     "action_name": action_name,
                     "anomaly_score": anomaly_score,
                     "threat_type": threat_label,
+                    "explanation": explanation,
                     "timestamp": time.time(),
                 }
 
@@ -162,7 +190,7 @@ class FirewallOrchestrator:
     async def _enforcer_loop(self) -> None:
         """
         Stage 3: Pull decisions from the action queue and apply
-        kernel-level rules via nftables.
+        kernel-level rules via nftables with XAI explanations.
         """
         logger.info("Kernel enforcer loop started")
         while self._running:
@@ -175,6 +203,7 @@ class FirewallOrchestrator:
                 src_ip = decision["src_ip"]
                 anomaly_score = decision["anomaly_score"]
                 threat_type = decision["threat_type"]
+                explanation = decision.get("explanation", "")
 
                 # Apply kernel action and measure latency
                 latency_ms = await self.enforcer.apply_action(
@@ -182,6 +211,7 @@ class FirewallOrchestrator:
                     action_name=action_name,
                     threat_type=threat_type,
                     anomaly_score=anomaly_score,
+                    explanation=explanation,
                 )
 
                 # Log to database
@@ -192,6 +222,7 @@ class FirewallOrchestrator:
                     action_taken=action_name,
                     mitigation_latency_ms=latency_ms,
                     rule_status="ACTIVE" if action_name in ("DROP_IP", "RATE_LIMIT_IP") else "N/A",
+                    explanation=explanation,
                 )
 
             except asyncio.TimeoutError:
@@ -211,6 +242,9 @@ class FirewallOrchestrator:
             kernel_enforcer=self.enforcer,
             classifier=self.classifier,
             sniffer=self.sniffer,
+            rl_agent=self.rl_agent,
+            threat_intel=self.threat_intel,
+            explainer=self.explainer,
         )
 
         def run_flask():
@@ -252,6 +286,7 @@ class FirewallOrchestrator:
         # Start async pipeline tasks
         tasks = [
             asyncio.create_task(self.sniffer.start()),
+            asyncio.create_task(self.threat_intel.start_sync_loop()),
             asyncio.create_task(self._classifier_loop()),
             asyncio.create_task(self._enforcer_loop()),
             asyncio.create_task(self.enforcer.start_cleanup_loop()),

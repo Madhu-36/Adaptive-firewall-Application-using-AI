@@ -90,7 +90,8 @@ CREATE TABLE IF NOT EXISTS firewall_events (
     anomaly_score         REAL    NOT NULL,
     action_taken          TEXT    NOT NULL,
     mitigation_latency_ms REAL,
-    rule_status           TEXT    DEFAULT 'ACTIVE'
+    rule_status           TEXT    DEFAULT 'ACTIVE',
+    explanation           TEXT    DEFAULT ''
 );
 """
 
@@ -103,8 +104,8 @@ CREATE INDEX IF NOT EXISTS idx_events_rule_status ON firewall_events(rule_status
 _INSERT_EVENT_SQL = """
 INSERT INTO firewall_events
     (timestamp, source_ip, threat_type, anomaly_score, action_taken,
-     mitigation_latency_ms, rule_status)
-VALUES (?, ?, ?, ?, ?, ?, ?);
+     mitigation_latency_ms, rule_status, explanation)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?);
 """
 
 
@@ -134,6 +135,11 @@ class DatabaseManager:
         with self._connect() as conn:
             conn.executescript(_CREATE_TABLE_SQL)
             conn.executescript(_CREATE_INDEX_SQL)
+            # Safe migration for existing DB files
+            try:
+                conn.execute("ALTER TABLE firewall_events ADD COLUMN explanation TEXT DEFAULT ''")
+            except sqlite3.OperationalError:
+                pass  # Already exists
             conn.execute("PRAGMA journal_mode=WAL")  # Write-Ahead Logging
             conn.execute("PRAGMA synchronous=NORMAL")
             conn.commit()
@@ -222,6 +228,7 @@ class DatabaseManager:
         action_taken: str,
         mitigation_latency_ms: float = 0.0,
         rule_status: str = "ACTIVE",
+        explanation: str = "",
     ) -> None:
         """
         Queue a firewall event for asynchronous database insertion.
@@ -232,7 +239,7 @@ class DatabaseManager:
         try:
             self._write_queue.put_nowait(
                 (timestamp, source_ip, threat_type, anomaly_score,
-                 action_taken, mitigation_latency_ms, rule_status)
+                 action_taken, mitigation_latency_ms, rule_status, explanation)
             )
         except queue.Full:
             logger.warning("Event write queue full — dropping event for %s", source_ip)
@@ -279,6 +286,7 @@ class DatabaseManager:
                     "action_taken": row["action_taken"],
                     "mitigation_latency_ms": row["mitigation_latency_ms"],
                     "rule_status": row["rule_status"],
+                    "explanation": row["explanation"] if "explanation" in row.keys() else "",
                 }
                 for row in rows
             ]

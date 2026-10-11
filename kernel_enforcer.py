@@ -56,6 +56,7 @@ class KernelRule:
     nft_handle: Optional[int] = None
     hit_count: int = 0
     last_refreshed: float = field(default_factory=time.monotonic)
+    explanation: str = ""
 
     @property
     def age_seconds(self) -> float:
@@ -80,6 +81,7 @@ class KernelRule:
             "age_seconds": round(self.age_seconds, 1),
             "ttl_sec": self.ttl_sec,
             "hit_count": self.hit_count,
+            "explanation": self.explanation,
         }
 
 
@@ -194,6 +196,7 @@ class KernelEnforcer:
         action_name: str,
         threat_type: str = "UNKNOWN",
         anomaly_score: float = 0.0,
+        explanation: str = "",
     ) -> float:
         """
         Apply a firewall action for the given source IP.
@@ -203,6 +206,7 @@ class KernelEnforcer:
             action_name:   "DROP_IP", "RATE_LIMIT_IP", "REMOVE_RULE", or "ALLOW"
             threat_type:   Classification label
             anomaly_score: Detection confidence
+            explanation:   Explainable AI reasoning string
 
         Returns:
             Mitigation latency in milliseconds.
@@ -234,6 +238,8 @@ class KernelEnforcer:
         if existing is not None:
             if existing.action == action_name:
                 existing.refresh(anomaly_score)
+                if explanation:
+                    existing.explanation = explanation
                 latency_ms = (time.perf_counter() - t_start) * 1000
                 return latency_ms
             else:
@@ -264,6 +270,7 @@ class KernelEnforcer:
                 threat_type=threat_type,
                 anomaly_score=anomaly_score,
                 ttl_sec=config.RULE_TTL_DEFAULT,
+                explanation=explanation,
             )
             self.registry.add(rule)
 
