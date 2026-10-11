@@ -784,55 +784,6 @@ def create_dashboard_app(
       </div>
     </section>
 
-    <!-- Live Cyberattack Simulation & Stress Testing Suite -->
-    <section class="toolbar-bar" style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.35);">
-      <div class="toolbar-title" style="color: #fca5a5;">
-        <span>⚔️ Live Cyberattack Simulation & Penetration Testing:</span>
-        <span id="sim-attack-badge" class="badge" style="background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.4);">IDLE / READY</span>
-        <span id="sim-attack-stats" style="font-size: 11px; font-family: var(--font-mono); color: var(--text-dim); margin-left: 10px;">0 packets injected</span>
-      </div>
-      <div class="toolbar-buttons">
-        <button class="btn btn-sm" style="background: rgba(239, 68, 68, 0.25); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.5);" onclick="triggerLaunchAttack('SYN_FLOOD')">⚡ SYN Flood</button>
-        <button class="btn btn-sm" style="background: rgba(245, 158, 11, 0.25); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.5);" onclick="triggerLaunchAttack('STEALTH_PORT_SCAN')">🔍 Port Scan</button>
-        <button class="btn btn-sm" style="background: rgba(139, 92, 246, 0.25); color: #c4b5fd; border: 1px solid rgba(139, 92, 246, 0.5);" onclick="triggerLaunchAttack('UDP_AMPLIFICATION')">🌊 UDP Burst</button>
-        <button class="btn btn-sm" style="background: rgba(6, 182, 212, 0.25); color: #67e8f9; border: 1px solid rgba(6, 182, 212, 0.5);" onclick="triggerLaunchAttack('ZERO_DAY_ANOMALY')">🧬 Zero-Day Anomaly</button>
-        <button class="btn btn-sm" style="background: rgba(236, 72, 153, 0.25); color: #f472b6; border: 1px solid rgba(236, 72, 153, 0.5);" onclick="triggerLaunchAttack('BRUTE_FORCE_SSH')">🔑 SSH Brute Force</button>
-        <button class="btn btn-danger btn-sm" onclick="triggerStopAttack()">🛑 Abort Attack</button>
-      </div>
-    </section>
-
-    <!-- MITRE ATT&CK Matrix Correlation Ribbon -->
-    <section class="panel" style="padding: 14px 18px; margin-bottom: 0;">
-      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
-        <div class="panel-title" style="margin-bottom: 0; font-size: 13px;">
-          <i>🎯</i> MITRE ATT&CK® Enterprise Matrix Correlation
-        </div>
-        <span class="badge badge-allow" style="font-size: 10px;">ACTIVE TACTIC MAPPING</span>
-      </div>
-      <div id="mitre-tactics-ribbon" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px;">
-        <div class="kpi-card" style="padding: 10px 14px;">
-          <div style="font-size: 10px; color: #fca5a5; font-weight: 700;">T1498.001 &bull; IMPACT</div>
-          <div style="font-size: 12px; font-weight: 600; margin: 2px 0;">Network DoS: SYN Flood</div>
-          <div style="font-size: 10px; color: var(--text-dim);">Kernel L4 Mitigation: Active</div>
-        </div>
-        <div class="kpi-card" style="padding: 10px 14px;">
-          <div style="font-size: 10px; color: #fcd34d; font-weight: 700;">T1046 &bull; RECONNAISSANCE</div>
-          <div style="font-size: 12px; font-weight: 600; margin: 2px 0;">Network Service Discovery</div>
-          <div style="font-size: 10px; color: var(--text-dim);">Port Sweep Suppression: Active</div>
-        </div>
-        <div class="kpi-card" style="padding: 10px 14px;">
-          <div style="font-size: 10px; color: #67e8f9; font-weight: 700;">T1071.001 &bull; COMMAND & CONTROL</div>
-          <div style="font-size: 12px; font-weight: 600; margin: 2px 0;">Protocol Polymorphism</div>
-          <div style="font-size: 10px; color: var(--text-dim);">Autoencoder Anomaly Baseline</div>
-        </div>
-        <div class="kpi-card" style="padding: 10px 14px;">
-          <div style="font-size: 10px; color: #f472b6; font-weight: 700;">T1110.001 &bull; CREDENTIAL ACCESS</div>
-          <div style="font-size: 12px; font-weight: 600; margin: 2px 0;">Brute Force Password Guessing</div>
-          <div style="font-size: 10px; color: var(--text-dim);">Port 22 Rate-Limit Quarantine</div>
-        </div>
-      </div>
-    </section>
-
     <!-- KPI Metric Cards -->
     <section class="kpi-grid">
       <!-- 1: Live Traffic Checker -->
@@ -883,53 +834,6 @@ def create_dashboard_app(
         </div>
         <div class="kpi-value" id="val-self-healed" style="color: var(--accent-purple);">0 Healed</div>
         <div class="kpi-sub positive" id="sub-fpr">✓ Auto-adjusting mistaken blocks</div>
-      </div>
-    </section>
-
-    <!-- Visual Section 1: Clear Step-by-Step Defense Pipeline -->
-    <section class="pipeline-section">
-      <div class="pipeline-header">
-        <div class="panel-title">
-          <i>🗺️</i> Autonomous Step-by-Step Defense Pipeline
-        </div>
-        <span class="badge badge-allow">END-TO-END AUTOMATION ACTIVE</span>
-      </div>
-      <div class="pipeline-flow" id="pipeline-stages-container">
-        <!-- Stage 1 -->
-        <div class="pipeline-stage">
-          <div class="stage-step-tag"><span>STAGE 01</span> <span class="pulse-dot" style="color:#34d399;"></span></div>
-          <div class="stage-title">Live Data Reader</div>
-          <div class="stage-module">PacketSniffer &bull; Promiscuous 5-Tuple flow tracker</div>
-          <div class="stage-metric"><span id="p1-metric">Tracking flows...</span> <span>0.4ms</span></div>
-        </div>
-        <!-- Stage 2 -->
-        <div class="pipeline-stage">
-          <div class="stage-step-tag"><span>STAGE 02</span> <span class="pulse-dot" style="color:#38bdf8;"></span></div>
-          <div class="stage-title">Smart Threat Finder</div>
-          <div class="stage-module">LSTM-Autoencoder &bull; Anomaly score &gt; 0.65</div>
-          <div class="stage-metric"><span id="p2-metric">Score evaluation</span> <span>1.1ms</span></div>
-        </div>
-        <!-- Stage 3 -->
-        <div class="pipeline-stage">
-          <div class="stage-step-tag"><span>STAGE 03</span> <span class="pulse-dot" style="color:#a78bfa;"></span></div>
-          <div class="stage-title">Intelligent Decision</div>
-          <div class="stage-module">PPO RL Agent &bull; DROP / RATE / ALLOW policy</div>
-          <div class="stage-metric"><span id="p3-metric">Autonomous policy</span> <span>0.6ms</span></div>
-        </div>
-        <!-- Stage 4 -->
-        <div class="pipeline-stage">
-          <div class="stage-step-tag"><span>STAGE 04</span> <span class="pulse-dot" style="color:#fbbf24;"></span></div>
-          <div class="stage-title">Automatic Rule Enforcer</div>
-          <div class="stage-module">nftables / eBPF kernel injector &bull; Sub-50ms</div>
-          <div class="stage-metric"><span id="p4-metric">Rules applied</span> <span id="p4-lat">1.2ms</span></div>
-        </div>
-        <!-- Stage 5 -->
-        <div class="pipeline-stage">
-          <div class="stage-step-tag"><span>STAGE 05</span> <span class="pulse-dot" style="color:#ec4899;"></span></div>
-          <div class="stage-title">Helpful Extra Tools</div>
-          <div class="stage-module">Threat Intel + XAI Explainer + Self-Healing</div>
-          <div class="stage-metric"><span id="p5-metric">OSINT sync &amp; audit</span> <span>0.2ms</span></div>
-        </div>
       </div>
     </section>
 
