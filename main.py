@@ -39,6 +39,9 @@ from logger_db import DatabaseManager, setup_logging
 from sniffer import PacketSniffer
 from threat_intel import ThreatIntelligenceFeed
 from xai_explainer import AnomalyExplainer
+from geo_intel import GeoIPIntelligence
+from mitre_mapper import MitreAttackMapper
+from attack_generator import CyberAttackSimulator
 
 
 logger = logging.getLogger("firewall.main")
@@ -74,6 +77,9 @@ class FirewallOrchestrator:
         self.enforcer = KernelEnforcer()
         self.threat_intel = ThreatIntelligenceFeed()
         self.explainer = AnomalyExplainer()
+        self.geo_intel = GeoIPIntelligence()
+        self.mitre_mapper = MitreAttackMapper()
+        self.attack_sim = CyberAttackSimulator(feature_queue=self.feature_queue)
 
         # Running state
         self._running = False
@@ -165,6 +171,10 @@ class FirewallOrchestrator:
                     src_ip=src_ip,
                 )
 
+                # Geo-IP and MITRE ATT&CK Correlation
+                geo_data = self.geo_intel.lookup(src_ip)
+                mitre_data = self.mitre_mapper.map_threat(threat_label)
+
                 # Queue the decision for kernel enforcement
                 decision = {
                     "src_ip": src_ip,
@@ -173,6 +183,8 @@ class FirewallOrchestrator:
                     "anomaly_score": anomaly_score,
                     "threat_type": threat_label,
                     "explanation": explanation,
+                    "geo": geo_data,
+                    "mitre": mitre_data,
                     "timestamp": time.time(),
                 }
 
@@ -245,6 +257,9 @@ class FirewallOrchestrator:
             rl_agent=self.rl_agent,
             threat_intel=self.threat_intel,
             explainer=self.explainer,
+            geo_intel=self.geo_intel,
+            mitre_mapper=self.mitre_mapper,
+            attack_sim=self.attack_sim,
         )
 
         def run_flask():

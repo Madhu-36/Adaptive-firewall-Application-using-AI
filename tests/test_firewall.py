@@ -83,3 +83,47 @@ def test_dashboard_endpoints():
 
     resp_base = client.get("/api/baseline")
     assert resp_base.status_code == 200
+
+    resp_mitre = client.get("/api/mitre")
+    assert resp_mitre.status_code == 200
+    assert "tactics" in resp_mitre.get_json()
+
+    resp_export = client.get("/api/export-incident-report")
+    assert resp_export.status_code == 200
+    export_data = resp_export.get_json()
+    assert "sha256_cryptographic_audit_signature" in export_data
+
+def test_geo_intelligence():
+    from geo_intel import GeoIPIntelligence
+    geo = GeoIPIntelligence()
+    res_ru = geo.lookup("185.112.98.44")
+    assert res_ru["cc"] == "RU"
+    assert res_ru["flag"] == "🇷🇺"
+    assert "Selectel" in res_ru["org"]
+
+    res_lan = geo.lookup("192.168.1.50")
+    assert res_lan["cc"] == "LAN"
+
+def test_mitre_mapping():
+    from mitre_mapper import MitreAttackMapper
+    m = MitreAttackMapper()
+    syn_map = m.map_threat("SYN_FLOOD")
+    assert syn_map["technique_id"] == "T1498.001"
+    assert syn_map["tactic"] == "Impact"
+
+    scan_map = m.map_threat("PORT_SCAN")
+    assert scan_map["technique_id"] == "T1046"
+
+    all_tactics = m.get_all_matrix_tactics()
+    assert len(all_tactics) >= 5
+
+def test_cyberattack_simulator():
+    from attack_generator import CyberAttackSimulator
+    sim = CyberAttackSimulator()
+    status = sim.get_status()
+    assert status["is_active"] is False
+
+    vec = sim._synthesize_attack_vector("SYN_FLOOD")
+    assert len(vec) == 15
+    assert vec[13] > 0.9  # SYN flag ratio > 90%
+
