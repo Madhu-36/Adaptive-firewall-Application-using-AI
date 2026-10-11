@@ -749,7 +749,7 @@ def create_dashboard_app(
       <div class="brand-badge">🛡️</div>
       <div>
         <div class="brand-title">NEXUS <span>ADAPTIVE FIREWALL</span></div>
-        <div class="brand-subtitle">Phase-1 Implementation &bull; Real-Time Anomaly Detection &bull; Kernel Automation</div>
+        <div class="brand-subtitle">Autonomous Real-Time Threat Mitigation &bull; Kernel Rule Automation</div>
       </div>
     </div>
     <div class="nav-actions">
@@ -777,12 +777,12 @@ def create_dashboard_app(
       </div>
     </section>
 
-    <!-- KPI Metric Cards (Slides 8, 9, 10) -->
+    <!-- KPI Metric Cards -->
     <section class="kpi-grid">
       <!-- 1: Live Traffic Checker -->
       <div class="kpi-card">
         <div class="kpi-header">
-          <span class="kpi-label">Live Ingestion (Slide 9)</span>
+          <span class="kpi-label">Live Ingestion</span>
           <span class="kpi-tag">50K CONNS CAPACITY</span>
         </div>
         <div class="kpi-value" id="val-total" style="color: var(--accent-cyan);">0</div>
@@ -792,7 +792,7 @@ def create_dashboard_app(
       <!-- 2: Smart Threat Finder -->
       <div class="kpi-card">
         <div class="kpi-header">
-          <span class="kpi-label">Threats Intercepted (Slide 8)</span>
+          <span class="kpi-label">Threats Intercepted</span>
           <span class="kpi-tag">ML AUTOENCODER</span>
         </div>
         <div class="kpi-value" id="val-threats" style="color: var(--accent-rose);">0</div>
@@ -802,7 +802,7 @@ def create_dashboard_app(
       <!-- 3: Active Rule Enforcer -->
       <div class="kpi-card">
         <div class="kpi-header">
-          <span class="kpi-label">Kernel Mitigations (Slide 8)</span>
+          <span class="kpi-label">Active Mitigations</span>
           <span class="kpi-tag">TTL AGING AUTO-CLEAN</span>
         </div>
         <div class="kpi-value" id="val-blocks" style="color: var(--accent-amber);">0</div>
@@ -812,7 +812,7 @@ def create_dashboard_app(
       <!-- 4: Non-Functional Latency Target -->
       <div class="kpi-card">
         <div class="kpi-header">
-          <span class="kpi-label">Mitigation Latency (Slide 10)</span>
+          <span class="kpi-label">Mitigation Latency</span>
           <span class="kpi-tag">TARGET &lt; 50ms</span>
         </div>
         <div class="kpi-value" id="val-latency" style="color: var(--accent-emerald);">0.0 ms</div>
@@ -822,7 +822,7 @@ def create_dashboard_app(
       <!-- 5: Self-Checking / False-Positive Watcher -->
       <div class="kpi-card">
         <div class="kpi-header">
-          <span class="kpi-label">Self-Checking Loop (Slide 8)</span>
+          <span class="kpi-label">Self-Healing Corrections</span>
           <span class="kpi-tag">FPR &lt; 5% TARGET</span>
         </div>
         <div class="kpi-value" id="val-self-healed" style="color: var(--accent-purple);">0 Healed</div>
@@ -830,11 +830,11 @@ def create_dashboard_app(
       </div>
     </section>
 
-    <!-- Visual Section 1: Clear Step-by-Step Defense Pipeline (Slide 11 Alignment) -->
+    <!-- Visual Section 1: Clear Step-by-Step Defense Pipeline -->
     <section class="pipeline-section">
       <div class="pipeline-header">
         <div class="panel-title">
-          <i>🗺️</i> Proposed System: Clear Step-by-Step Defense Pipeline (Slide 11)
+          <i>🗺️</i> Autonomous Step-by-Step Defense Pipeline
         </div>
         <span class="badge badge-allow">END-TO-END AUTOMATION ACTIVE</span>
       </div>
@@ -877,11 +877,11 @@ def create_dashboard_app(
       </div>
     </section>
 
-    <!-- Visual Section 2: Non-Functional Requirements & SLA Verification (Slide 10 Alignment) -->
+    <!-- Visual Section 2: Performance Benchmarks & SLA Verification -->
     <section class="sla-section">
       <div class="pipeline-header">
         <div class="panel-title">
-          <i>📋</i> Non-Functional Requirements &amp; SLA Compliance Verification (Slide 10)
+          <i>📋</i> Performance Benchmarks &amp; SLA Compliance Verification
         </div>
         <span class="pass-pill">ALL 5 METRICS VERIFIED COMPLIANT</span>
       </div>
@@ -909,12 +909,12 @@ def create_dashboard_app(
       </div>
     </section>
 
-    <!-- Profilers & Extra Tools Deep-Dive (Slide 8 & Slide 11) -->
+    <!-- Profilers & Extra Tools Deep-Dive -->
     <section class="extra-tools-grid">
       <!-- Normal Traffic Baseline Profiler -->
       <div class="tool-box">
         <div class="tool-box-title">
-          <span>🧠 Normal Traffic Base (Slide 8)</span>
+          <span>🧠 Baseline Traffic Profiler</span>
           <span class="badge badge-allow">CALIBRATED</span>
         </div>
         <div class="tool-rows">
@@ -929,7 +929,7 @@ def create_dashboard_app(
       <!-- Self-Checking Watcher -->
       <div class="tool-box">
         <div class="tool-box-title">
-          <span>🛡️ Self-Checking System (Slide 8)</span>
+          <span>🛡️ Self-Healing Engine</span>
           <span class="badge badge-rate">MONITORING</span>
         </div>
         <div class="tool-rows">
@@ -944,7 +944,7 @@ def create_dashboard_app(
       <!-- Threat Intelligence Feeds -->
       <div class="tool-box">
         <div class="tool-box-title">
-          <span>🌐 Threat Intelligence Feed (Slide 9)</span>
+          <span>🌐 Global Threat Intelligence Feeds</span>
           <span class="badge badge-drop" id="intel-count-badge">12 Tracked</span>
         </div>
         <div class="tool-rows">
@@ -982,7 +982,7 @@ def create_dashboard_app(
       <div class="panel">
         <div class="panel-header">
           <div class="panel-title">
-            <i>🎯</i> Attack Vector Distribution (Slide 9)
+            <i>🎯</i> Attack Vector Distribution
           </div>
           <span class="badge badge-allow" id="badge-clean-ratio">100% CLEAN</span>
         </div>
@@ -1034,7 +1034,7 @@ def create_dashboard_app(
       <div class="panel">
         <div class="panel-header">
           <div class="panel-title">
-            <i>📡</i> Real-Time SOC Audit Stream (Slide 9)
+            <i>📡</i> Real-Time SOC Audit Stream
           </div>
           <div class="panel-controls">
             <span id="stream-rate-badge" class="badge badge-allow">0 ev/s</span>
@@ -1043,92 +1043,6 @@ def create_dashboard_app(
         </div>
         <div class="terminal-feed" id="terminal-stream">
           <!-- Live events populate here -->
-        </div>
-      </div>
-    </section>
-
-    <!-- Expected Outcomes & Target Deployment Environments (Slide 14 Alignment) -->
-    <section class="panel">
-      <div class="panel-header">
-        <div class="panel-title">
-          <i>🌐</i> Expected Outcomes &amp; Target Deployment Environments (Slide 14)
-        </div>
-        <span class="badge badge-allow">SLIDE 14 SPECIFICATION</span>
-      </div>
-      <div class="outcomes-grid">
-        <!-- 1. Enterprise Networks -->
-        <div class="outcome-card">
-          <div class="outcome-header">
-            <div class="outcome-title"><span>🏢</span> Enterprise Networks</div>
-            <span class="badge badge-drop" style="font-size:10px;">DDoS / ZERO-DAY</span>
-          </div>
-          <div class="outcome-desc">
-            Autonomous perimeter defense stopping unauthorized lateral movement, volumetric floods, and zero-day intrusions with zero SOC fatigue.
-          </div>
-          <div class="outcome-metric">
-            <span>Protection Target:</span>
-            <span>Zero-Touch Perimeter</span>
-          </div>
-        </div>
-
-        <!-- 2. Cloud and VPN Environments -->
-        <div class="outcome-card">
-          <div class="outcome-header">
-            <div class="outcome-title"><span>☁️</span> Cloud &amp; VPN Environments</div>
-            <span class="badge badge-rate" style="font-size:10px;">REMOTE WORK</span>
-          </div>
-          <div class="outcome-desc">
-            Safeguards hybrid multi-cloud infrastructure and high-throughput corporate VPN endpoints against brute-force tunneling and credential scans.
-          </div>
-          <div class="outcome-metric">
-            <span>Target Availability:</span>
-            <span>99.999% Wire-Speed</span>
-          </div>
-        </div>
-
-        <!-- 3. IoT and 5G Networks -->
-        <div class="outcome-card">
-          <div class="outcome-header">
-            <div class="outcome-title"><span>📶</span> IoT &amp; 5G Networks</div>
-            <span class="badge badge-zero" style="font-size:10px;">BOTNET MITIGATION</span>
-          </div>
-          <div class="outcome-desc">
-            Filters distributed botnets (e.g. Mirai) at wire speed without introducing telemetry latency or exhausting edge memory buffers.
-          </div>
-          <div class="outcome-metric">
-            <span>Max Scalability:</span>
-            <span>50,000+ Conns</span>
-          </div>
-        </div>
-
-        <!-- 4. Critical Infrastructure -->
-        <div class="outcome-card">
-          <div class="outcome-header">
-            <div class="outcome-title"><span>⚡</span> Critical Infrastructure</div>
-            <span class="badge badge-drop" style="font-size:10px;">SCADA / INDUSTRIAL</span>
-          </div>
-          <div class="outcome-desc">
-            Real-time protection for power grids, industrial automation, and healthcare networks demanding sub-50ms deterministic isolation.
-          </div>
-          <div class="outcome-metric">
-            <span>SLA Response:</span>
-            <span>&lt; 50ms Hard Deadline</span>
-          </div>
-        </div>
-
-        <!-- 5. Data Centers -->
-        <div class="outcome-card">
-          <div class="outcome-header">
-            <div class="outcome-title"><span>🖥️</span> Hyperscale Data Centers</div>
-            <span class="badge badge-allow" style="font-size:10px;">TERABIT SCALE</span>
-          </div>
-          <div class="outcome-desc">
-            Handles heavy packet volume and complex multitenant flows through high-throughput eBPF/XDP kernel offload and automated rule lifecycle.
-          </div>
-          <div class="outcome-metric">
-            <span>Filtering Layer:</span>
-            <span>eBPF Wire-Speed Drop</span>
-          </div>
         </div>
       </div>
     </section>
