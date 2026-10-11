@@ -890,7 +890,7 @@ def create_dashboard_app(
       </div>
     </div>
     <div class="nav-actions">
-      <button class="btn btn-sm" style="background: rgba(6, 182, 212, 0.18); color: #67e8f9; border: 1px solid rgba(6, 182, 212, 0.45); font-weight: 600; display: inline-flex; align-items: center; gap: 7px; cursor: pointer; padding: 6px 14px; border-radius: 999px;" onclick="openPortSentinelModal()" title="View active & inactive ports, search services, and close/quarantine ports">
+      <button class="btn btn-sm" style="background: rgba(6, 182, 212, 0.18); color: #67e8f9; border: 1px solid rgba(6, 182, 212, 0.45); font-weight: 600; display: inline-flex; align-items: center; gap: 7px; cursor: pointer; padding: 6px 14px; border-radius: 999px;" onclick="scrollToPortsSection()" title="Jump to Network Port Activity & Service Sentinel section">
         <span>🔌</span> <span>Port Sentinel</span>
         <span id="nav-open-ports-badge" class="badge badge-allow" style="font-size: 10px; padding: 1px 6px;">SCAN</span>
       </button>
@@ -912,7 +912,7 @@ def create_dashboard_app(
         <span class="badge badge-allow">AUTONOMOUS ORCHESTRATION</span>
       </div>
       <div class="toolbar-buttons">
-        <button class="btn btn-sm" style="background: rgba(6, 182, 212, 0.2); color: #67e8f9; border: 1px solid rgba(6, 182, 212, 0.5); font-weight: 700; display: inline-flex; align-items: center; gap: 6px;" onclick="openPortSentinelModal()">
+        <button class="btn btn-sm" style="background: rgba(6, 182, 212, 0.2); color: #67e8f9; border: 1px solid rgba(6, 182, 212, 0.5); font-weight: 700; display: inline-flex; align-items: center; gap: 6px;" onclick="scrollToPortsSection()">
           <span>🔌</span> <span>Network Port Activity &amp; Sentinel</span>
         </button>
         <button class="btn btn-primary btn-sm" onclick="triggerSyncThreatIntel()">⚡ Sync Threat Feeds (OSINT)</button>
@@ -1087,6 +1087,62 @@ def create_dashboard_app(
         <div class="chart-box">
           <canvas id="chart-distribution"></canvas>
         </div>
+      </div>
+    </section>
+
+    <!-- Dedicated Section: Network Port Sentinel & Active Service Inspector -->
+    <section class="panel" id="section-ports">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title" style="font-size: 15px;">
+            <i>🔌</i> Network Port Activity &amp; Service Sentinel
+            <span class="badge badge-allow" id="badge-port-open-count" style="font-size: 11px;">0 ACTIVE / OPEN</span>
+            <span class="badge" id="badge-port-closed-count" style="font-size: 11px; background: rgba(100, 116, 139, 0.2); color: #94a3b8;">0 INACTIVE</span>
+            <span class="badge badge-drop" id="badge-port-quarantined-count" style="font-size: 11px; display: none;">0 QUARANTINED</span>
+          </div>
+          <div style="font-size: 11.5px; color: var(--text-dim); margin-top: 3px;">
+            Real-time inspection of listening sockets, bound daemons, protocol services ("what it is doing"), and kernel-level port quarantine.
+          </div>
+        </div>
+        <div class="panel-controls">
+          <button class="btn btn-secondary btn-sm" onclick="fetchPortData(true)">🔄 Rescan Ports</button>
+        </div>
+      </div>
+
+      <!-- Search Bar & Status Filter Pills -->
+      <div class="port-filter-bar">
+        <div class="port-search-box">
+          <input type="text" id="port-section-search" class="port-search-input" placeholder="🔍 Search port number (e.g. 80, 22, 443), service (HTTP, SSH), process, or protocol..." oninput="filterSectionPortTable()">
+        </div>
+        <div class="port-filter-pills">
+          <button class="port-pill-btn active" id="sec-pill-all" onclick="setSectionPortFilter('ALL', this)">All Ports (<span id="sec-count-all">0</span>)</button>
+          <button class="port-pill-btn" id="sec-pill-open" onclick="setSectionPortFilter('OPEN', this)">🟢 Open / Active (<span id="sec-count-open">0</span>)</button>
+          <button class="port-pill-btn" id="sec-pill-closed" onclick="setSectionPortFilter('CLOSED', this)">🔴 Closed / Inactive (<span id="sec-count-closed">0</span>)</button>
+          <button class="port-pill-btn" id="sec-pill-blocked" onclick="setSectionPortFilter('BLOCKED', this)">🛡️ Quarantined (<span id="sec-count-blocked">0</span>)</button>
+        </div>
+      </div>
+
+      <!-- Ports Data Table -->
+      <div class="table-wrap" style="max-height: 440px;">
+        <table>
+          <thead>
+            <tr>
+              <th style="min-width: 110px;">Port &amp; Proto</th>
+              <th style="min-width: 140px;">State</th>
+              <th style="min-width: 300px;">Service &amp; Function ("What It Is Doing")</th>
+              <th style="min-width: 190px;">Bound Process / Daemon</th>
+              <th style="min-width: 120px;">Risk Level</th>
+              <th style="min-width: 160px; text-align: center;">Enforcement Action</th>
+            </tr>
+          </thead>
+          <tbody id="section-port-table-body">
+            <tr>
+              <td colspan="6" style="text-align: center; color: var(--text-dim); padding: 30px;">
+                Scanning network interfaces and active sockets...
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </section>
 
@@ -1674,10 +1730,20 @@ def create_dashboard_app(
     }
 
     // =========================================================================
-    // Port Sentinel & Network Inspector
+    // Port Sentinel & Network Inspector (Section & Modal)
     // =========================================================================
     let currentPortsList = [];
     let activePortFilter = 'ALL';
+    let activeSectionPortFilter = 'ALL';
+
+    function scrollToPortsSection() {
+      const el = document.getElementById('section-ports');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        el.style.borderColor = 'var(--accent-cyan)';
+        setTimeout(() => { el.style.borderColor = 'var(--border-light)'; }, 1500);
+      }
+    }
 
     function openPortSentinelModal() {
       const modal = document.getElementById('port-sentinel-modal');
@@ -1707,7 +1773,31 @@ def create_dashboard_app(
         const data = await res.json();
         currentPortsList = data.ports || [];
 
-        // Update modal summary cards
+        // Update on-screen section badges
+        const secOpenBadge = document.getElementById('badge-port-open-count');
+        const secClosedBadge = document.getElementById('badge-port-closed-count');
+        const secQuarantinedBadge = document.getElementById('badge-port-quarantined-count');
+        const secCountAll = document.getElementById('sec-count-all');
+        const secCountOpen = document.getElementById('sec-count-open');
+        const secCountClosed = document.getElementById('sec-count-closed');
+        const secCountBlocked = document.getElementById('sec-count-blocked');
+
+        if (secOpenBadge) secOpenBadge.textContent = `${data.active_count} ACTIVE / OPEN`;
+        if (secClosedBadge) secClosedBadge.textContent = `${data.closed_count} INACTIVE`;
+        if (secQuarantinedBadge) {
+          if (data.blocked_count > 0) {
+            secQuarantinedBadge.style.display = 'inline-flex';
+            secQuarantinedBadge.textContent = `${data.blocked_count} QUARANTINED`;
+          } else {
+            secQuarantinedBadge.style.display = 'none';
+          }
+        }
+        if (secCountAll) secCountAll.textContent = data.total;
+        if (secCountOpen) secCountOpen.textContent = data.active_count;
+        if (secCountClosed) secCountClosed.textContent = data.closed_count;
+        if (secCountBlocked) secCountBlocked.textContent = data.blocked_count;
+
+        // Update modal summary cards & navbar badge
         const elTotal = document.getElementById('modal-total-count');
         const elActive = document.getElementById('modal-active-count');
         const elInactive = document.getElementById('modal-inactive-count');
@@ -1720,7 +1810,7 @@ def create_dashboard_app(
         if (elBlocked) elBlocked.textContent = data.blocked_count;
         if (elNavBadge) elNavBadge.textContent = `${data.active_count} OPEN`;
 
-        // Update pill counts
+        // Update modal pill counts
         const pillAll = document.getElementById('pill-count-all');
         const pillOpen = document.getElementById('pill-count-open');
         const pillClosed = document.getElementById('pill-count-closed');
@@ -1731,6 +1821,7 @@ def create_dashboard_app(
         if (pillClosed) pillClosed.textContent = data.closed_count;
         if (pillBlocked) pillBlocked.textContent = data.blocked_count;
 
+        filterSectionPortTable();
         filterPortTable();
         if (showToastMsg) showToast('🔄 Network port status refreshed');
       } catch (err) {
@@ -1738,9 +1829,56 @@ def create_dashboard_app(
       }
     }
 
+    function setSectionPortFilter(filterType, btnElement) {
+      activeSectionPortFilter = filterType;
+      document.querySelectorAll('#section-ports .port-pill-btn').forEach(btn => btn.classList.remove('active'));
+      if (btnElement) btnElement.classList.add('active');
+      filterSectionPortTable();
+    }
+
+    function filterSectionPortTable() {
+      const searchInput = document.getElementById('port-section-search');
+      const query = (searchInput ? searchInput.value : '').toLowerCase().trim();
+
+      const filtered = currentPortsList.filter(p => {
+        if (activeSectionPortFilter === 'OPEN' && !p.is_open) return false;
+        if (activeSectionPortFilter === 'CLOSED' && p.is_open) return false;
+        if (activeSectionPortFilter === 'BLOCKED' && !p.is_blocked) return false;
+
+        if (query) {
+          const match = (
+            String(p.port).includes(query) ||
+            (p.service || '').toLowerCase().includes(query) ||
+            (p.description || '').toLowerCase().includes(query) ||
+            (p.protocol || '').toLowerCase().includes(query) ||
+            (p.process_name || '').toLowerCase().includes(query) ||
+            (p.risk_level || '').toLowerCase().includes(query) ||
+            (p.state_label || '').toLowerCase().includes(query)
+          );
+          if (!match) return false;
+        }
+        return true;
+      });
+
+      const tbody = document.getElementById('section-port-table-body');
+      if (tbody) {
+        if (!filtered || filtered.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="6" style="text-align: center; color: var(--text-dim); padding: 30px;">
+                🔍 No ports match the search query or selected filter.
+              </td>
+            </tr>
+          `;
+        } else {
+          tbody.innerHTML = filtered.map(generatePortRowHtml).join('');
+        }
+      }
+    }
+
     function setPortFilter(filterType, btnElement) {
       activePortFilter = filterType;
-      document.querySelectorAll('.port-pill-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('#port-sentinel-modal .port-pill-btn').forEach(btn => btn.classList.remove('active'));
       if (btnElement) btnElement.classList.add('active');
       filterPortTable();
     }
@@ -1769,81 +1907,77 @@ def create_dashboard_app(
         return true;
       });
 
-      renderPortsTable(filtered);
-    }
-
-    function renderPortsTable(ports) {
       const tbody = document.getElementById('port-table-body');
-      if (!tbody) return;
-
-      if (!ports || ports.length === 0) {
-        tbody.innerHTML = `
-          <tr>
-            <td colspan="6" style="text-align: center; color: var(--text-dim); padding: 30px;">
-              🔍 No ports match the search query or selected filter.
-            </td>
-          </tr>
-        `;
-        return;
-      }
-
-      tbody.innerHTML = ports.map(p => {
-        let stateBadge = '';
-        if (p.is_blocked) {
-          stateBadge = `<span class="badge" style="background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.4);"><span class="pulse-dot" style="background: #ef4444; width:6px; height:6px;"></span> KERNEL DROPPED</span>`;
-        } else if (p.is_open) {
-          stateBadge = `<span class="badge badge-allow"><span class="pulse-dot" style="background: #10b981; width:6px; height:6px;"></span> OPEN (Active)</span>`;
-        } else {
-          stateBadge = `<span class="badge" style="background: rgba(100, 116, 139, 0.15); color: #94a3b8; border: 1px solid rgba(100, 116, 139, 0.3);">CLOSED (Inactive)</span>`;
-        }
-
-        let riskBadge = '';
-        if (p.risk_level === 'CORE') {
-          riskBadge = `<span class="badge" style="background: rgba(59, 130, 246, 0.15); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.3); font-size: 10px;">CORE SERVICE</span>`;
-        } else if (p.risk_level === 'LOW') {
-          riskBadge = `<span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); font-size: 10px;">LOW EXPOSURE</span>`;
-        } else if (p.risk_level === 'HIGH') {
-          riskBadge = `<span class="badge badge-drop" style="font-size: 10px;">HIGH EXPOSURE</span>`;
-        } else {
-          riskBadge = `<span class="badge badge-rate" style="font-size: 10px;">SENSITIVE</span>`;
-        }
-
-        let procInfo = '';
-        if (p.is_listening) {
-          procInfo = `
-            <div style="font-weight: 600; color: #60a5fa; font-family: var(--font-mono); font-size: 11px;">${p.process_name}</div>
-            <div style="font-size: 10px; color: var(--text-dim); font-family: var(--font-mono);">${p.bind_address}:${p.port} (PID ${p.pid})</div>
+      if (tbody) {
+        if (!filtered || filtered.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="6" style="text-align: center; color: var(--text-dim); padding: 30px;">
+                🔍 No ports match the search query or selected filter.
+              </td>
+            </tr>
           `;
         } else {
-          procInfo = `<span style="color: var(--text-dim); font-size: 11px;">Not Bound (Idle)</span>`;
+          tbody.innerHTML = filtered.map(generatePortRowHtml).join('');
         }
+      }
+    }
 
-        let actionBtn = '';
-        if (p.is_blocked) {
-          actionBtn = `<button class="btn btn-sm" style="background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); cursor: pointer;" onclick="triggerOpenPort(${p.port}, '${p.protocol}')">✅ Re-Open Port</button>`;
-        } else if (p.is_open) {
-          actionBtn = `<button class="btn btn-danger btn-sm" style="cursor: pointer;" onclick="triggerClosePort(${p.port}, '${p.protocol}')">🛑 Close Port</button>`;
-        } else {
-          actionBtn = `<button class="btn btn-sm" style="background: rgba(255, 255, 255, 0.05); color: var(--text-muted); border: 1px solid var(--border-light); cursor: pointer;" onclick="triggerClosePort(${p.port}, '${p.protocol}')">🚫 Block Inbound</button>`;
-        }
+    function generatePortRowHtml(p) {
+      let stateBadge = '';
+      if (p.is_blocked) {
+        stateBadge = `<span class="badge" style="background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.4);"><span class="pulse-dot" style="background: #ef4444; width:6px; height:6px;"></span> KERNEL DROPPED</span>`;
+      } else if (p.is_open) {
+        stateBadge = `<span class="badge badge-allow"><span class="pulse-dot" style="background: #10b981; width:6px; height:6px;"></span> OPEN (Active)</span>`;
+      } else {
+        stateBadge = `<span class="badge" style="background: rgba(100, 116, 139, 0.15); color: #94a3b8; border: 1px solid rgba(100, 116, 139, 0.3);">CLOSED (Inactive)</span>`;
+      }
 
-        return `
-          <tr>
-            <td>
-              <div style="font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--accent-cyan);">${p.port}</div>
-              <span class="badge" style="font-size: 9px; padding: 1px 5px; background: rgba(255, 255, 255, 0.06);">${p.protocol}</span>
-            </td>
-            <td>${stateBadge}</td>
-            <td>
-              <div style="font-weight: 700; font-size: 12px; color: #f8fafc;">${p.service}</div>
-              <div style="font-size: 11px; color: var(--text-dim); margin-top: 2px; max-width: 380px; white-space: normal; line-height: 1.35;">${p.description}</div>
-            </td>
-            <td>${procInfo}</td>
-            <td>${riskBadge}</td>
-            <td style="text-align: center;">${actionBtn}</td>
-          </tr>
+      let riskBadge = '';
+      if (p.risk_level === 'CORE') {
+        riskBadge = `<span class="badge" style="background: rgba(59, 130, 246, 0.15); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.3); font-size: 10px;">CORE SERVICE</span>`;
+      } else if (p.risk_level === 'LOW') {
+        riskBadge = `<span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); font-size: 10px;">LOW EXPOSURE</span>`;
+      } else if (p.risk_level === 'HIGH') {
+        riskBadge = `<span class="badge badge-drop" style="font-size: 10px;">HIGH EXPOSURE</span>`;
+      } else {
+        riskBadge = `<span class="badge badge-rate" style="font-size: 10px;">SENSITIVE</span>`;
+      }
+
+      let procInfo = '';
+      if (p.is_listening) {
+        procInfo = `
+          <div style="font-weight: 600; color: #60a5fa; font-family: var(--font-mono); font-size: 11px;">${p.process_name}</div>
+          <div style="font-size: 10px; color: var(--text-dim); font-family: var(--font-mono);">${p.bind_address}:${p.port} (PID ${p.pid})</div>
         `;
-      }).join('');
+      } else {
+        procInfo = `<span style="color: var(--text-dim); font-size: 11px;">Not Bound (Idle)</span>`;
+      }
+
+      let actionBtn = '';
+      if (p.is_blocked) {
+        actionBtn = `<button class="btn btn-sm" style="background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); cursor: pointer;" onclick="triggerOpenPort(${p.port}, '${p.protocol}')">✅ Re-Open Port</button>`;
+      } else if (p.is_open) {
+        actionBtn = `<button class="btn btn-danger btn-sm" style="cursor: pointer;" onclick="triggerClosePort(${p.port}, '${p.protocol}')">🛑 Close Port</button>`;
+      } else {
+        actionBtn = `<button class="btn btn-sm" style="background: rgba(255, 255, 255, 0.05); color: var(--text-muted); border: 1px solid var(--border-light); cursor: pointer;" onclick="triggerClosePort(${p.port}, '${p.protocol}')">🚫 Block Inbound</button>`;
+      }
+
+      return `
+        <tr>
+          <td>
+            <div style="font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--accent-cyan);">${p.port}</div>
+            <span class="badge" style="font-size: 9px; padding: 1px 5px; background: rgba(255, 255, 255, 0.06);">${p.protocol}</span>
+          </td>
+          <td>${stateBadge}</td>
+          <td>
+            <div style="font-weight: 700; font-size: 12px; color: #f8fafc;">${p.service}</div>
+            <div style="font-size: 11px; color: var(--text-dim); margin-top: 2px; max-width: 380px; white-space: normal; line-height: 1.35;">${p.description}</div>
+          </td>
+          <td>${procInfo}</td>
+          <td>${riskBadge}</td>
+          <td style="text-align: center;">${actionBtn}</td>
+        </tr>
     }
 
     async function triggerClosePort(port, protocol) {
