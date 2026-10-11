@@ -499,15 +499,7 @@ def create_dashboard_app(
       font-weight: 600;
     }
 
-    /* Active Rules & Feed Row */
-    .bottom-grid {
-      display: grid;
-      grid-template-columns: 1.5fr 1fr;
-      gap: 20px;
-    }
-    @media (max-width: 1150px) {
-      .bottom-grid { grid-template-columns: 1fr; }
-    }
+    /* Active Rules & Feed Row: Stacked full-width for spacious layout */
 
     /* Data Table Styling */
     .table-wrap {
@@ -594,16 +586,17 @@ def create_dashboard_app(
       transition: width 0.3s;
     }
 
-    /* Terminal Feed */
+    /* Terminal Feed (Full-Width SOC Stream) */
     .terminal-feed {
-      height: 380px;
+      height: 400px;
       background: #060911;
       border: 1px solid var(--border-subtle);
       border-radius: var(--radius-sm);
-      padding: 12px;
+      padding: 14px 18px;
       font-family: var(--font-mono);
-      font-size: 11px;
+      font-size: 11.5px;
       overflow-y: auto;
+      overflow-x: auto;
       display: flex;
       flex-direction: column;
       gap: 6px;
@@ -611,16 +604,21 @@ def create_dashboard_app(
     .feed-line {
       display: flex;
       align-items: center;
-      gap: 8px;
-      padding: 4px 6px;
-      border-radius: 3px;
+      gap: 12px;
+      padding: 6px 12px;
+      border-radius: 4px;
       background: rgba(255, 255, 255, 0.015);
-      border-left: 2px solid var(--accent-cyan);
+      border-left: 3px solid var(--accent-cyan);
+      transition: background 0.15s ease;
+      white-space: nowrap;
     }
-    .feed-time { color: var(--text-dim); }
-    .feed-ip { color: #f8fafc; font-weight: 600; min-width: 105px; }
-    .feed-threat { color: #a78bfa; min-width: 95px; }
-    .feed-xai { color: #93c5fd; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .feed-line:hover {
+      background: rgba(255, 255, 255, 0.04);
+    }
+    .feed-time { color: var(--text-dim); min-width: 75px; }
+    .feed-ip { color: #f8fafc; font-weight: 600; min-width: 140px; }
+    .feed-threat { color: #a78bfa; min-width: 150px; }
+    .feed-xai { color: #93c5fd; flex: 1; overflow: hidden; text-overflow: ellipsis; }
 
     /* Expected Outcomes Grid (Slide 14) */
     .outcomes-grid {
@@ -952,58 +950,55 @@ def create_dashboard_app(
       </div>
     </section>
 
-    <!-- Active Rules & Live Threat Feed -->
-    <section class="bottom-grid">
-      <!-- Active Kernel Mitigation Rules -->
-      <div class="panel">
-        <div class="panel-header">
-          <div class="panel-title">
-            <i>⚡</i> Active Kernel Mitigations <span id="rules-count-badge" class="badge badge-rate">(0)</span>
-          </div>
-          <div class="panel-controls">
-            <button class="btn btn-secondary btn-sm" onclick="triggerRetrain()">🔄 Retrain Model</button>
-            <button class="btn btn-danger btn-sm" onclick="triggerFlush()">🗑️ Flush All</button>
-          </div>
+    <!-- Active Kernel Mitigation Rules (Full-Width) -->
+    <section class="panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <i>⚡</i> Active Kernel Mitigations <span id="rules-count-badge" class="badge badge-rate">(0)</span>
         </div>
-
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Source Address</th>
-                <th>Enforcement</th>
-                <th>Threat Class</th>
-                <th>Explainable AI (XAI Attribution)</th>
-                <th>Anomaly Risk</th>
-                <th>Age / TTL</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody id="rules-table-body">
-              <tr>
-                <td colspan="7" style="text-align: center; color: var(--text-dim); padding: 30px;">
-                  No active blocks — clean network state
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        <div class="panel-controls">
+          <button class="btn btn-secondary btn-sm" onclick="triggerRetrain()">🔄 Retrain Model</button>
+          <button class="btn btn-danger btn-sm" onclick="triggerFlush()">🗑️ Flush All</button>
         </div>
       </div>
 
-      <!-- Live Stream Security Event Log -->
-      <div class="panel">
-        <div class="panel-header">
-          <div class="panel-title">
-            <i>📡</i> Real-Time SOC Audit Stream
-          </div>
-          <div class="panel-controls">
-            <span id="stream-rate-badge" class="badge badge-allow">0 ev/s</span>
-            <button class="btn btn-secondary btn-sm" onclick="clearStreamLog()">Clear</button>
-          </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Source Address</th>
+              <th>Enforcement</th>
+              <th>Threat Class</th>
+              <th>Explainable AI (XAI Attribution)</th>
+              <th>Anomaly Risk</th>
+              <th>Age / TTL</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="rules-table-body">
+            <tr>
+              <td colspan="7" style="text-align: center; color: var(--text-dim); padding: 30px;">
+                No active blocks — clean network state
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Real-Time SOC Audit Stream (Dedicated Full-Width Terminal) -->
+    <section class="panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <i>📡</i> Real-Time SOC Audit Stream
         </div>
-        <div class="terminal-feed" id="terminal-stream">
-          <!-- Live events populate here -->
+        <div class="panel-controls">
+          <span id="stream-rate-badge" class="badge badge-allow">0 ev/s</span>
+          <button class="btn btn-secondary btn-sm" onclick="clearStreamLog()">Clear</button>
         </div>
+      </div>
+      <div class="terminal-feed" id="terminal-stream">
+        <!-- Live events populate here -->
       </div>
     </section>
 
