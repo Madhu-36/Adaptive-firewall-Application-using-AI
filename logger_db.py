@@ -237,17 +237,16 @@ class DatabaseManager:
         except queue.Full:
             logger.warning("Event write queue full — dropping event for %s", source_ip)
 
-        # Also write to structured audit log
-        audit_entry = {
-            "ts": timestamp,
-            "ip": source_ip,
-            "threat": threat_type,
-            "score": round(anomaly_score, 4),
-            "action": action_taken,
-            "latency_ms": round(mitigation_latency_ms, 2),
-            "status": rule_status,
-        }
-        logger.info("EVENT | %s", json.dumps(audit_entry))
+        # Clean terminal output formatting
+        action_tag = f"[{action_taken}]"
+        logger.info(
+            "%-15s | %-16s | %-16s | RISK: %5.3f | LATENCY: %5.2fms",
+            source_ip,
+            threat_type,
+            action_tag,
+            anomaly_score,
+            mitigation_latency_ms,
+        )
 
     def update_rule_status(self, source_ip: str, new_status: str) -> None:
         """
