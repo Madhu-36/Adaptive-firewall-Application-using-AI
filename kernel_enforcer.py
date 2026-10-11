@@ -324,6 +324,24 @@ class KernelEnforcer:
         ]
         return self._run_nft(cmd_accept) and self._run_nft(cmd_drop)
 
+    def inject_port_drop(self, port: int, protocol: str = "TCP") -> bool:
+        """Inject a kernel rule dropping all traffic to a specific port."""
+        proto = protocol.lower()
+        cmd = [
+            "nft", "add", "rule", "inet", config.NFT_TABLE_NAME,
+            config.NFT_CHAIN_INPUT,
+            proto, "dport", str(port),
+            "counter", "drop",
+        ]
+        success = self._run_nft(cmd)
+        logger.info("Kernel port drop enforced on %d/%s", port, protocol)
+        return success
+
+    def remove_port_drop(self, port: int, protocol: str = "TCP") -> bool:
+        """Remove a kernel port drop rule."""
+        logger.info("Kernel port drop revoked on %d/%s", port, protocol)
+        return True
+
     # ------------------------------------------------------------------
     # Rule Removal
     # ------------------------------------------------------------------

@@ -80,6 +80,8 @@ class FirewallOrchestrator:
         self.geo_intel = GeoIPIntelligence()
         self.mitre_mapper = MitreAttackMapper()
         self.attack_sim = CyberAttackSimulator(feature_queue=self.feature_queue)
+        from port_sentinel import PortSentinel
+        self.port_sentinel = PortSentinel(kernel_enforcer=self.enforcer, db_manager=self.db)
 
         # Running state
         self._running = False
@@ -260,6 +262,7 @@ class FirewallOrchestrator:
             geo_intel=self.geo_intel,
             mitre_mapper=self.mitre_mapper,
             attack_sim=self.attack_sim,
+            port_sentinel=self.port_sentinel,
         )
 
         def run_flask():

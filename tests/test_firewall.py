@@ -127,3 +127,53 @@ def test_cyberattack_simulator():
     assert len(vec) == 15
     assert vec[13] > 0.9  # SYN flag ratio > 90%
 
+def test_port_sentinel():
+    from port_sentinel import PortSentinel
+    ps = PortSentinel()
+    ports = ps.scan_ports()
+    assert len(ports) > 0
+    p80 = next((p for p in ports if p["port"] == 80), None)
+    assert p80 is not None
+    assert "HTTP" in p80["service"]
+    assert "description" in p80
+
+    # Test closing port
+    close_res = ps.close_port(80, "TCP")
+    assert close_res["success"] is True
+    assert close_res["status"] == "CLOSED"
+
+    # Search for port 80
+    search_res = ps.search(query="80")
+    assert any(p["port"] == 80 for p in search_res)
+
+    # Re-open port 80
+    open_res = ps.open_port(80, "TCP")
+    assert open_res["success"] is True
+    assert open_res["status"] == "OPEN"
+
+def test_port_endpoints():
+    from app_dashboard import create_dashboard_app
+    app = create_dashboard_app()
+    client = app.test_client()
+
+    resp_ports = client.get("/api/ports")
+    assert resp_ports.status_code == 200
+    data = resp_ports.get_json()
+    assert "ports" in data
+    assert "total" in data
+    assert data["total"] > 0
+
+    resp_search = client.get("/api/ports/search?q=HTTP")
+    assert resp_search.status_code == 200
+    search_data = resp_search.get_json()
+    assert search_data["count"] > 0
+
+    resp_close = client.post("/api/ports/close", json={"port": 80, "protocol": "TCP"})
+    assert resp_close.status_code == 200
+    assert resp_close.get_json()["success"] is True
+
+    resp_open = client.post("/api/ports/open", json={"port": 80, "protocol": "TCP"})
+    assert resp_open.status_code == 200
+    assert resp_open.get_json()["success"] is True
+
+
