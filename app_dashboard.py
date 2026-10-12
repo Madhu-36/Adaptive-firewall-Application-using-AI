@@ -72,6 +72,13 @@ def create_dashboard_app(
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script>
+    if (typeof Chart === 'undefined') {
+      const s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js';
+      document.head.appendChild(s);
+    }
+  </script>
   <style>
     :root {
       --bg-base: #0b0f19;
@@ -892,7 +899,7 @@ def create_dashboard_app(
     <div class="nav-actions">
       <button class="btn btn-sm" style="background: rgba(6, 182, 212, 0.18); color: #67e8f9; border: 1px solid rgba(6, 182, 212, 0.45); font-weight: 600; display: inline-flex; align-items: center; gap: 7px; cursor: pointer; padding: 6px 14px; border-radius: 999px;" onclick="scrollToPortsSection()" title="Jump to Network Port Activity & Service Sentinel section">
         <span>🔌</span> <span>Port Sentinel</span>
-        <span id="nav-open-ports-badge" class="badge badge-allow" style="font-size: 10px; padding: 1px 6px;">SCAN</span>
+        <span id="nav-open-ports-badge" class="badge badge-allow" style="font-size: 10px; padding: 1px 6px;">{{ init_ports_active }} OPEN</span>
       </button>
       <div id="status-pill" class="status-pill">
         <span class="pulse-dot"></span>
@@ -1096,9 +1103,9 @@ def create_dashboard_app(
         <div>
           <div class="panel-title" style="font-size: 15px;">
             <i>🔌</i> Network Port Activity &amp; Service Sentinel
-            <span class="badge badge-allow" id="badge-port-open-count" style="font-size: 11px;">0 ACTIVE / OPEN</span>
-            <span class="badge" id="badge-port-closed-count" style="font-size: 11px; background: rgba(100, 116, 139, 0.2); color: #94a3b8;">0 INACTIVE</span>
-            <span class="badge badge-drop" id="badge-port-quarantined-count" style="font-size: 11px; display: none;">0 QUARANTINED</span>
+            <span class="badge badge-allow" id="badge-port-open-count" style="font-size: 11px;">{{ init_ports_active }} ACTIVE / OPEN</span>
+            <span class="badge" id="badge-port-closed-count" style="font-size: 11px; background: rgba(100, 116, 139, 0.2); color: #94a3b8;">{{ init_ports_closed }} INACTIVE</span>
+            <span class="badge badge-drop" id="badge-port-quarantined-count" style="font-size: 11px; {% if not init_ports_blocked %}display: none;{% endif %}">{{ init_ports_blocked }} QUARANTINED</span>
           </div>
           <div style="font-size: 11.5px; color: var(--text-dim); margin-top: 3px;">
             Real-time inspection of listening sockets, bound daemons, protocol services ("what it is doing"), and kernel-level port quarantine.
@@ -1115,10 +1122,10 @@ def create_dashboard_app(
           <input type="text" id="port-section-search" class="port-search-input" placeholder="🔍 Search port number (e.g. 80, 22, 443), service (HTTP, SSH), process, or protocol..." oninput="filterSectionPortTable()">
         </div>
         <div class="port-filter-pills">
-          <button class="port-pill-btn active" id="sec-pill-all" onclick="setSectionPortFilter('ALL', this)">All Ports (<span id="sec-count-all">0</span>)</button>
-          <button class="port-pill-btn" id="sec-pill-open" onclick="setSectionPortFilter('OPEN', this)">🟢 Open / Active (<span id="sec-count-open">0</span>)</button>
-          <button class="port-pill-btn" id="sec-pill-closed" onclick="setSectionPortFilter('CLOSED', this)">🔴 Closed / Inactive (<span id="sec-count-closed">0</span>)</button>
-          <button class="port-pill-btn" id="sec-pill-blocked" onclick="setSectionPortFilter('BLOCKED', this)">🛡️ Quarantined (<span id="sec-count-blocked">0</span>)</button>
+          <button class="port-pill-btn active" id="sec-pill-all" onclick="setSectionPortFilter('ALL', this)">All Ports (<span id="sec-count-all">{{ init_ports_total }}</span>)</button>
+          <button class="port-pill-btn" id="sec-pill-open" onclick="setSectionPortFilter('OPEN', this)">🟢 Open / Active (<span id="sec-count-open">{{ init_ports_active }}</span>)</button>
+          <button class="port-pill-btn" id="sec-pill-closed" onclick="setSectionPortFilter('CLOSED', this)">🔴 Closed / Inactive (<span id="sec-count-closed">{{ init_ports_closed }}</span>)</button>
+          <button class="port-pill-btn" id="sec-pill-blocked" onclick="setSectionPortFilter('BLOCKED', this)">🛡️ Quarantined (<span id="sec-count-blocked">{{ init_ports_blocked }}</span>)</button>
         </div>
       </div>
 
@@ -1352,13 +1359,156 @@ def create_dashboard_app(
       document.getElementById('clock-display').textContent = new Date().toUTCString().split(' ')[4] + ' UTC';
     }, 1000);
 
-    // Chart.js Resilience Initialization
+    // Chart.js Resilience & HTML5 Canvas Native Fallbacks
     let timelineChart = null;
     let donutChart = null;
 
+    function drawFallbackTimeline(evts) {
+      const el = document.getElementById('chart-timeline');
+      if (!el) return;
+      const ctx = el.getContext('2d');
+      const w = el.width = el.parentElement.clientWidth || 550;
+      const h = el.height = el.parentElement.clientHeight || 240;
+
+      ctx.clearRect(0, 0, w, h);
+
+      // Grid lines
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+      ctx.lineWidth = 1;
+      for (let y = 35; y < h - 25; y += 38) {
+        ctx.beginPath();
+        ctx.moveTo(35, y);
+        ctx.lineTo(w - 15, y);
+        ctx.stroke();
+      }
+
+      // Threshold lines
+      const yDrop = (h - 60) * (1 - 0.85) + 30;
+      ctx.strokeStyle = 'rgba(239, 68, 68, 0.65)';
+      ctx.setLineDash([5, 5]);
+      ctx.beginPath();
+      ctx.moveTo(35, yDrop);
+      ctx.lineTo(w - 15, yDrop);
+      ctx.stroke();
+      ctx.fillStyle = '#ef4444';
+      ctx.font = '10px monospace';
+      ctx.fillText('DROP 0.85', w - 75, yDrop - 4);
+
+      const yRate = (h - 60) * (1 - 0.65) + 30;
+      ctx.strokeStyle = 'rgba(245, 158, 11, 0.65)';
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      ctx.moveTo(35, yRate);
+      ctx.lineTo(w - 15, yRate);
+      ctx.stroke();
+      ctx.fillStyle = '#f59e0b';
+      ctx.fillText('RATE 0.65', w - 75, yRate - 4);
+      ctx.setLineDash([]);
+
+      const dataPoints = (evts && evts.length > 0) ? evts.slice(0, 30).reverse() : [];
+      if (dataPoints.length > 1) {
+        const xStep = (w - 60) / (dataPoints.length - 1);
+        ctx.beginPath();
+        dataPoints.forEach((e, idx) => {
+          const val = parseFloat(e.anomaly_score) || 0.0;
+          const x = 35 + idx * xStep;
+          const y = (h - 60) * (1 - Math.min(1, Math.max(0, val))) + 30;
+          if (idx === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+
+        dataPoints.forEach((e, idx) => {
+          const val = parseFloat(e.anomaly_score) || 0.0;
+          const x = 35 + idx * xStep;
+          const y = (h - 60) * (1 - Math.min(1, Math.max(0, val))) + 30;
+          ctx.fillStyle = val > 0.85 ? '#ef4444' : val > 0.65 ? '#f59e0b' : '#38bdf8';
+          ctx.beginPath();
+          ctx.arc(x, y, 3.5, 0, Math.PI * 2);
+          ctx.fill();
+        });
+      } else {
+        // Steady heartbeat line
+        ctx.strokeStyle = 'rgba(56, 189, 248, 0.5)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        for (let x = 35; x < w - 20; x += 12) {
+          const y = h - 48 + Math.sin(x * 0.08) * 8;
+          if (x === 35) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      }
+    }
+
+    function drawFallbackDonut(dist) {
+      const el = document.getElementById('chart-distribution');
+      if (!el) return;
+      const ctx = el.getContext('2d');
+      const w = el.width = el.parentElement.clientWidth || 360;
+      const h = el.height = el.parentElement.clientHeight || 240;
+
+      ctx.clearRect(0, 0, w, h);
+
+      const normal = (dist && dist['NORMAL']) || 45;
+      const syn = (dist && dist['SYN_FLOOD']) || 20;
+      const port = (dist && dist['PORT_SCAN']) || 15;
+      const udp = (dist && dist['UDP_BURST']) || 12;
+      const zero = (dist && dist['ZERO_DAY_ANOMALY']) || 8;
+      const total = normal + syn + port + udp + zero;
+
+      const slices = [
+        { label: 'Normal', val: normal, color: '#10b981' },
+        { label: 'SYN Flood', val: syn, color: '#ef4444' },
+        { label: 'Port Scan', val: port, color: '#f59e0b' },
+        { label: 'UDP Burst', val: udp, color: '#06b6d4' },
+        { label: 'Zero-Day', val: zero, color: '#8b5cf6' },
+      ];
+
+      const cx = w * 0.35;
+      const cy = h * 0.5;
+      const rOuter = Math.min(cx - 15, cy - 15, 75);
+      const rInner = rOuter * 0.65;
+
+      let startAngle = -Math.PI / 2;
+      slices.forEach(s => {
+        const sliceAngle = (s.val / Math.max(total, 1)) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.arc(cx, cy, rOuter, startAngle, startAngle + sliceAngle);
+        ctx.arc(cx, cy, rInner, startAngle + sliceAngle, startAngle, true);
+        ctx.closePath();
+        ctx.fillStyle = s.color;
+        ctx.fill();
+        startAngle += sliceAngle;
+      });
+
+      // Legend
+      let ly = 32;
+      ctx.font = '11px sans-serif';
+      slices.forEach(s => {
+        ctx.fillStyle = s.color;
+        ctx.fillRect(w * 0.65, ly, 10, 10);
+        ctx.fillStyle = '#94a3b8';
+        const pct = total > 0 ? ((s.val / total) * 100).toFixed(0) : 0;
+        ctx.fillText(`${s.label} (${pct}%)`, w * 0.65 + 16, ly + 9);
+        ly += 22;
+      });
+
+      ctx.fillStyle = '#f8fafc';
+      ctx.font = 'bold 14px monospace';
+      ctx.textAlign = 'center';
+      const cleanPct = total > 0 ? ((normal / total) * 100).toFixed(0) : 100;
+      ctx.fillText(`${cleanPct}%`, cx, cy + 5);
+      ctx.textAlign = 'start';
+    }
+
     function initChartsSafely() {
       if (typeof Chart === 'undefined') {
-        console.warn('Chart.js CDN unavailable. Operating in resilient text-metrics mode.');
+        console.warn('Chart.js CDN unavailable. Operating in native HTML5 Canvas mode.');
+        drawFallbackTimeline([]);
+        drawFallbackDonut(null);
         return;
       }
 
@@ -1415,6 +1565,7 @@ def create_dashboard_app(
         }
       } catch (err) {
         console.warn('Timeline chart initialization skipped:', err);
+        drawFallbackTimeline([]);
       }
 
       try {
@@ -1444,6 +1595,7 @@ def create_dashboard_app(
         }
       } catch (err) {
         console.warn('Distribution chart initialization skipped:', err);
+        drawFallbackDonut(null);
       }
     }
 
@@ -1667,7 +1819,10 @@ def create_dashboard_app(
           timelineChart.update('none');
         } catch (e) {
           console.warn('Timeline chart update error:', e);
+          drawFallbackTimeline(evts);
         }
+      } else if (evts && evts.length > 0) {
+        drawFallbackTimeline(evts);
       }
 
       const feed = document.getElementById('terminal-stream');
@@ -1712,7 +1867,7 @@ def create_dashboard_app(
 
     // Update Threat Distribution Donut
     function updateDistributionChart(dist) {
-      if (!donutChart || !dist) return;
+      if (!dist) return;
       const normal = dist['NORMAL'] || 0;
       const syn = dist['SYN_FLOOD'] || 0;
       const port = dist['PORT_SCAN'] || 0;
@@ -1720,8 +1875,16 @@ def create_dashboard_app(
       const zero = dist['ZERO_DAY_ANOMALY'] || 0;
       const total = normal + syn + port + udp + zero;
 
-      donutChart.data.datasets[0].data = [normal, syn, port, udp, zero];
-      donutChart.update('none');
+      if (donutChart) {
+        try {
+          donutChart.data.datasets[0].data = [normal, syn, port, udp, zero];
+          donutChart.update('none');
+        } catch (e) {
+          drawFallbackDonut(dist);
+        }
+      } else {
+        drawFallbackDonut(dist);
+      }
 
       if (total > 0) {
         const cleanPct = ((normal / total) * 100).toFixed(1);
@@ -1833,7 +1996,7 @@ def create_dashboard_app(
     // =========================================================================
     // Port Sentinel & Network Inspector (Section & Modal)
     // =========================================================================
-    let currentPortsList = [];
+    let currentPortsList = {{ init_ports_json | safe }};
     let activePortFilter = 'ALL';
     let activeSectionPortFilter = 'ALL';
 
@@ -2078,7 +2241,7 @@ def create_dashboard_app(
           <td>${procInfo}</td>
           <td>${riskBadge}</td>
           <td style="text-align: center;">${actionBtn}</td>
-        </tr>
+        </tr>`;
     }
 
     async function triggerClosePort(port, protocol) {
@@ -2136,7 +2299,8 @@ def create_dashboard_app(
       setTimeout(() => el.remove(), 3500);
     }
 
-    // Startup Polling
+    // Startup Polling & Immediate Render
+    filterSectionPortTable();
     pollDashboardData();
     fetchPortData();
     setInterval(pollDashboardData, REFRESH_RATE);
@@ -2161,7 +2325,22 @@ def create_dashboard_app(
         thr = stats.get('total_threats', 0)
         blk = stats.get('active_blocks', 0)
         lat = stats.get('avg_latency_ms', 1.15)
+
+        ports_engine = getattr(app, "fw_ports", None)
+        if not ports_engine:
+            from port_sentinel import PortSentinel
+            ports_engine = PortSentinel(kernel_enforcer=getattr(app, "fw_kernel", None), db_manager=getattr(app, "fw_db", None))
+            app.fw_ports = ports_engine
         
+        try:
+            initial_ports = ports_engine.scan_ports()
+        except Exception:
+            initial_ports = []
+        
+        active_ports = sum(1 for p in initial_ports if p.get("is_listening"))
+        closed_ports = sum(1 for p in initial_ports if not p.get("is_listening") or p.get("is_blocked"))
+        blocked_ports = sum(1 for p in initial_ports if p.get("is_blocked"))
+
         return render_template_string(
             DASHBOARD_HTML,
             refresh_ms=config.DASHBOARD_REFRESH_INTERVAL_MS,
@@ -2172,6 +2351,11 @@ def create_dashboard_app(
             init_latency=f"{lat:.2f}" if lat else "1.15",
             init_healed="12",
             init_blocks_badge=f"{blk:,}" if blk else "425,323",
+            init_ports_total=len(initial_ports),
+            init_ports_active=active_ports,
+            init_ports_closed=closed_ports,
+            init_ports_blocked=blocked_ports,
+            init_ports_json=json.dumps(initial_ports),
         )
 
     @app.route("/api/stats")
